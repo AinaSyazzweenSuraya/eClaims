@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('PM Approvals')}"></head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+  <div class="page-header">
+    <div><h1 class="page-title">PM Approvals</h1><p class="page-sub">Claims pending your approval</p></div>
+  </div>
+  <div class="card-panel">
+    <div class="card-panel-header">
+      <h2 class="card-panel-title"><i class="bi bi-person-check me-2"></i>Pending Claims</h2>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Form No.</th><th>Staff</th><th>Date</th><th>Status</th><th class="text-end">Total (RM)</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr th:if="${#lists.isEmpty(claims)}">
+            <td colspan="6" class="empty-state"><i class="bi bi-check-all"></i><p>No claims pending your approval.</p></td>
+          </tr>
+          <tr th:each="c : ${claims}">
+            <td><span class="claim-ref" th:text="'Form #' + ${c.formId}">—</span></td>
+            <td th:text="${c.staffName}">—</td>
+            <td th:text="${c.createdDate != null ? #temporals.format(c.createdDate,'dd MMM yyyy') : '—'}">—</td>
+            <td><span class="status-badge" th:classappend="'status-' + ${c.wfStatus.toLowerCase()}" th:text="${c.wfStatus.replace('_',' ')}">—</span></td>
+            <td class="text-end fw-600 mono" th:text="${#numbers.formatDecimal(c.totalClaim != null ? c.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
+            <td><div class="action-btns">
+              <a th:href="@{/approval/pm/{id}(id=${c.workflowId})}" class="btn-action" title="Review"><i class="bi bi-eye"></i></a>
+              <a th:href="@{/claims/pdf/{id}(id=${c.workflowId})}" class="btn-action" title="PDF"><i class="bi bi-file-pdf"></i></a>
+            </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>

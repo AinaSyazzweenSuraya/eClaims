@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Authorize Claim')}"></head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+  <div class="page-header">
+    <div><h1 class="page-title">Authorize Claim</h1>
+      <p class="page-sub" th:text="'Form #' + ${form.formId} + ' · ' + ${form.staffName}">—</p></div>
+    <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}" class="btn-pdf"><i class="bi bi-file-pdf"></i> Download PDF</a>
+  </div>
+  <div class="card-panel" style="padding:1.5rem">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
+      <div><label class="form-label-sm">Staff</label><div th:text="${form.staffName}">—</div></div>
+      <div><label class="form-label-sm">Department</label><div th:text="${form.department}">—</div></div>
+      <div><label class="form-label-sm">Total (RM)</label><div class="fw-600 mono" th:text="${#numbers.formatDecimal(form.totalClaim,1,'COMMA',2,'POINT')}">0.00</div></div>
+    </div>
+    <form th:action="@{/approval/superior/{id}(id=${form.workflowId})}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div style="margin-bottom:1rem">
+        <label class="form-label-sm">Remarks (optional)</label>
+        <textarea name="remarks" class="form-input" rows="3" placeholder="Enter remarks..."></textarea>
+      </div>
+      <div style="display:flex;gap:.75rem">
+        <button type="submit" name="action" value="Approve" class="btn-approve"><i class="bi bi-check-lg me-1"></i> Authorize</button>
+        <button type="submit" name="action" value="Reject"  class="btn-reject" onclick="return confirm('Reject?')"><i class="bi bi-x-lg me-1"></i> Reject</button>
+        <a th:href="@{/approval/superior}" style="margin-left:auto;color:var(--text-muted);font-size:.875rem;align-self:center">← Back</a>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>

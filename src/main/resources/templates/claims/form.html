@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('New Claim')}"></head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">E-Claim Apply Form</h1>
+      <p class="page-sub" id="formIdDisplay"
+         th:text="${form != null and form.formId != null} ? 'Form #' + ${form.formId} : 'New Claim'">New Claim</p>
+    </div>
+    <div style="display:flex;gap:.75rem" th:if="${form != null and form.workflowId != null}">
+      <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}" class="btn-pdf">
+        <i class="bi bi-file-pdf"></i> Download PDF
+      </a>
+    </div>
+  </div>
+
+  <!-- Hidden fields -->
+  <input type="hidden" id="workflowIdField"
+         th:value="${form != null} ? ${form.workflowId} : ''"/>
+
+  <!-- ── Staff Info Banner ── -->
+  <div class="form-section" style="margin-bottom:1.25rem">
+    <div style="background:#0f1523;padding:1rem 1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem">
+      <div>
+        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Staff ID</div>
+        <div style="color:#fff;font-weight:700;font-family:var(--font-mono)" th:text="${staff.staffId}">—</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Name</div>
+        <div style="color:#fff;font-weight:600" th:text="${staff.name}">—</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Department</div>
+        <div style="color:#e2e8f0" th:text="${staff.departmentName}">—</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Company</div>
+        <div style="color:#e2e8f0" th:text="${staff.companyName}">—</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Designation</div>
+        <div style="color:#e2e8f0" th:text="${staff.designation}">—</div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Date</div>
+        <div style="color:#e2e8f0" th:text="${#temporals.format(#temporals.createNow(),'dd/MM/yyyy')}">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MEDICAL / DENTAL / OPTICAL ── -->
+  <div class="form-section" id="medicalSection">
+    <div class="form-section-header">
+      <div class="section-title"><i class="bi bi-hospital me-2" style="color:#e11d48"></i>Medical / Dental / Optical Claim</div>
+      <button type="button" class="btn-add-row" onclick="addRow('medicalSection')">
+        <i class="bi bi-plus-lg"></i> Add Row
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="claim-row-table">
+        <thead>
+          <tr>
+            <th style="width:110px">Date</th>
+            <th style="width:160px">Claim Type</th>
+            <th>Clinic name & Description</th>
+            <th style="width:110px">Amount (RM)</th>
+            <th style="width:110px">Total (RM)</th>
+            <th style="width:40px">Attach</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+      Total: <strong class="mono" id="medicalSectionSub">0.00</strong>
+    </div>
+  </div>
+
+  <!-- ── MEAL ALLOWANCE ── -->
+  <div class="form-section" id="mealSection">
+    <div class="form-section-header">
+      <div class="section-title"><i class="bi bi-cup-hot me-2" style="color:#d97706"></i>Meal Allowance</div>
+      <button type="button" class="btn-add-row" onclick="addRow('mealSection')">
+        <i class="bi bi-plus-lg"></i> Add Row
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="claim-row-table">
+        <thead>
+          <tr>
+            <th style="width:110px">Date</th>
+            <th style="width:150px">Claim Type</th>
+            <th>Description</th>
+            <th style="width:90px">Time From</th>
+            <th style="width:90px">Time To</th>
+            <th style="width:160px">Project Manager</th>
+            <th style="width:100px">Amount (RM)</th>
+            <th style="width:100px">Total (RM)</th>
+            <th style="width:40px">Attach</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+      Total: <strong class="mono" id="mealSectionSub">0.00</strong>
+    </div>
+  </div>
+
+  <!-- ── TRAVEL ALLOWANCE ── -->
+  <div class="form-section" id="travelSection">
+    <div class="form-section-header">
+      <div class="section-title"><i class="bi bi-airplane me-2" style="color:#2563eb"></i>Travel Allowance</div>
+      <button type="button" class="btn-add-row" onclick="addRow('travelSection')">
+        <i class="bi bi-plus-lg"></i> Add Row
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="claim-row-table">
+        <thead>
+          <tr>
+            <th style="width:110px">Date</th>
+            <th style="width:160px">Location</th>
+            <th style="width:180px">Meal Allowance</th>
+            <th style="width:100px">Limit (RM)</th>
+            <th style="width:100px">Total (RM)</th>
+            <th style="width:40px">Attach</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+      Total: <strong class="mono" id="travelSectionSub">0.00</strong>
+    </div>
+  </div>
+
+  <!-- ── OTHERS ── -->
+  <div class="form-section" id="othersSection">
+    <div class="form-section-header">
+      <div class="section-title"><i class="bi bi-three-dots me-2" style="color:#7c3aed"></i>Others</div>
+      <button type="button" class="btn-add-row" onclick="addRow('othersSection')">
+        <i class="bi bi-plus-lg"></i> Add Row
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="claim-row-table">
+        <thead>
+          <tr>
+            <th style="width:110px">Date</th>
+            <th style="width:180px">Claim Type</th>
+            <th>Description / Mileage Details</th>
+            <th style="width:120px">Amount (RM)</th>
+            <th style="width:120px">Total (RM)</th>
+            <th style="width:40px">Attach</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+      Total: <strong class="mono" id="othersSectionSub">0.00</strong>
+    </div>
+  </div>
+
+  <!-- ── GRAND TOTAL BAR ── -->
+  <div class="grand-total-bar">
+    <div>
+      <div class="grand-total-label">Total Claims Amount</div>
+      <div class="grand-total-value">RM <span id="grandTotal">0.00</span></div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn-save" onclick="saveDraft()">
+        <i class="bi bi-floppy me-1"></i> Save Draft
+      </button>
+      <!-- Submit Claim — hidden in Phase 1, visible in Phase 2+ -->
+      <button th:if="${!phase1}"
+              type="button" class="btn-submit" onclick="submitClaim()">
+        <i class="bi bi-send me-1"></i> Submit Claim
+      </button>
+      <!-- Phase 1 notice -->
+      <span th:if="${phase1}"
+            style="font-size:.8rem;color:#94a3b8;align-self:center;font-style:italic">
+        <i class="bi bi-info-circle me-1"></i> Submission coming in Phase 2
+      </span>
+    </div>
+  </div>
+
+  <!-- ── CLAIM RECORDS (balances) ── -->
+  <div class="form-section" th:if="${balances != null and !#lists.isEmpty(balances)}">
+    <div class="form-section-header">
+      <div class="section-title"><i class="bi bi-bar-chart me-2"></i>Claim Records — Entitlement Summary</div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th class="text-end">Enti / Year (RM)</th>
+            <th class="text-end">Claimed (RM)</th>
+            <th class="text-end">Balance (RM)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="b : ${balances}"
+              th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? 'row-over-limit' : ''">
+            <td th:text="${b.claimTitle}">—</td>
+            <td class="text-end mono" th:text="${#numbers.formatDecimal(b.entitled,1,'COMMA',2,'POINT')}">0.00</td>
+            <td class="text-end mono" th:text="${#numbers.formatDecimal(b.claimed,1,'COMMA',2,'POINT')}">0.00</td>
+            <td class="text-end mono fw-600"
+                th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? ' text-danger' : ' text-success'"
+                th:text="${#numbers.formatDecimal(b.balance,1,'COMMA',2,'POINT')}">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<div id="toastWrap"></div>
+
+<!-- Inject reference data for JS -->
+<script th:inline="javascript">
+  const CLAIM_TYPES       = /*[[${claimTypes}]]*/ [];
+  const PANEL_CLINICS     = /*[[${panelClinics}]]*/ [];
+  const TRAVEL_LOCATIONS  = /*[[${travelLocations}]]*/ [];
+  const TRAVEL_MEALS      = /*[[${travelMeals}]]*/ [];
+  const PROJECT_MANAGERS  = /*[[${projectManagers}]]*/ [];
+  // Existing rows for edit mode - pre-populate the form
+  const EXISTING_ROWS     = /*[[${form != null ? form.rows : null}]]*/ null;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/claim-form.js}"></script>
+</body>
+</html>

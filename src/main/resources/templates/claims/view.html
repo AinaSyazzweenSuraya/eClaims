@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('View Claim')}"></head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+  <!-- Rejection notice banner -->
+  <div th:if="${form.wfStatus == 'PM_REJECTED' or form.wfStatus == 'SUPERIOR_REJECTED'}"
+       class="alert-banner danger" style="margin-bottom:1rem">
+    <i class="bi bi-exclamation-circle-fill"></i>
+    <div>
+      <strong>This claim was rejected.</strong>
+      You can edit it and resubmit for approval.
+      Check the Claim History below to see the rejection reason.
+    </div>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" th:text="'Form #' + ${form.formId}">View Claim</h1>
+      <p class="page-sub">
+        <span class="status-badge" th:classappend="'status-' + ${form.wfStatus.toLowerCase()}" th:text="${form.wfStatus.replace('_',' ')}">—</span>
+        &nbsp;·&nbsp;<span th:text="${form.staffName}">—</span>
+        &nbsp;·&nbsp;<span th:text="${form.createdDate != null ? #temporals.format(form.createdDate,'dd MMM yyyy') : '—'}">—</span>
+      </p>
+    </div>
+    <div style="display:flex;gap:.75rem">
+      <!-- Edit button for DRAFT -->
+      <a th:if="${form.canEdit and form.wfStatus == 'DRAFT'}"
+         th:href="@{/claims/{id}/edit(id=${form.workflowId})}"
+         class="btn-primary-action">
+        <i class="bi bi-pencil"></i> Edit Draft
+      </a>
+      <!-- Delete button for DRAFT only -->
+      <button th:if="${form.wfStatus == 'DRAFT'}"
+              type="button" class="btn-pdf"
+              style="background:#fef2f2;color:#dc2626;border-color:#fecaca"
+              th:data-wf-id="${form.workflowId}"
+              th:data-form-id="${form.formId}"
+              onclick="confirmDelete(this.dataset.wfId, this.dataset.formId)">
+        <i class="bi bi-trash3"></i> Delete Draft
+      </button>
+      <!-- Resubmit button for rejected claims -->
+      <a th:if="${form.canEdit and (form.wfStatus == 'PM_REJECTED' or form.wfStatus == 'SUPERIOR_REJECTED')}"
+         th:href="@{/claims/{id}/edit(id=${form.workflowId})}"
+         class="btn-primary-action" style="background:#d97706">
+        <i class="bi bi-arrow-counterclockwise"></i> Edit &amp; Resubmit
+      </a>
+      <!-- Download Dropdown -->
+      <div style="position:relative;display:inline-block" id="downloadDropWrap">
+        <button type="button" onclick="toggleDownloadDrop()"
+                style="display:inline-flex;align-items:center;gap:6px;background:#0f1523;color:#fff;
+                       border:none;border-radius:10px;padding:.65rem 1.25rem;font-size:.875rem;
+                       font-weight:600;cursor:pointer;font-family:inherit">
+          <i class="bi bi-download"></i> Download
+          <i class="bi bi-chevron-down" style="font-size:.7rem"></i>
+        </button>
+        <div id="downloadDrop"
+             style="display:none;position:absolute;right:0;top:calc(100% + 6px);
+                    background:#fff;border:1px solid #e2e8f0;border-radius:12px;
+                    box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:999;overflow:hidden">
+          <!-- Option 1: Summary Only -->
+          <a th:href="@{/claims/pdf-summary/{id}(id=${form.workflowId})}"
+             style="display:flex;align-items:center;gap:12px;padding:.9rem 1.1rem;
+                    color:#0f172a;text-decoration:none;transition:background .12s;border-bottom:1px solid #f1f5f9"
+             onmouseover="this.style.background='#f8fafc'"
+             onmouseout="this.style.background='transparent'">
+            <div style="width:34px;height:34px;border-radius:8px;background:#eff6ff;
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="bi bi-file-text" style="color:#2563eb;font-size:1rem"></i>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:.85rem">Summary Only</div>
+              <div style="font-size:.75rem;color:#64748b">Claim form without attachments</div>
+            </div>
+          </a>
+          <!-- Option 2: Full Report with attachments -->
+          <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}"
+             style="display:flex;align-items:center;gap:12px;padding:.9rem 1.1rem;
+                    color:#0f172a;text-decoration:none;transition:background .12s"
+             onmouseover="this.style.background='#f8fafc'"
+             onmouseout="this.style.background='transparent'">
+            <div style="width:34px;height:34px;border-radius:8px;background:#f0fdf4;
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="bi bi-paperclip" style="color:#059669;font-size:1rem"></i>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:.85rem">Full Report</div>
+              <div style="font-size:.75rem;color:#64748b">Claim form + section-wise receipts</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rows by section -->
+  <div class="card-panel">
+    <div class="card-panel-header"><h2 class="card-panel-title"><i class="bi bi-receipt me-2"></i>Claim Details</h2></div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Details</th><th class="text-end">Amount (RM)</th><th class="text-end">Total (RM)</th><th>Receipt</th></tr></thead>
+        <tbody>
+          <tr th:if="${#lists.isEmpty(form.rows)}"><td colspan="7" class="empty-state"><p>No claim rows.</p></td></tr>
+          <tr th:each="r : ${form.rows}">
+            <td th:text="${r.date != null ? #temporals.format(r.date,'dd/MM/yyyy') : '—'}">—</td>
+            <td><span class="status-badge status-submitted" style="font-size:.72rem" th:text="${claimTypeLookup != null and claimTypeLookup[r.claimId] != null ? claimTypeLookup[r.claimId] : r.claimId}">—</span></td>
+            <td th:text="${r.description != null ? r.description : '—'}">—</td>
+            <td style="font-size:.78rem;color:var(--text-muted)">
+              <span th:if="${r.timeFrom != null}" th:text="${r.timeFrom} + ' – ' + ${r.timeTo}">—</span>
+              <span th:if="${r.medicalClinic != null}" th:text="${r.medicalClinic}">—</span>
+              <span th:if="${r.travelId != null}" th:text="${r.travelId} + ' / ' + ${r.mealId}">—</span>
+              <span th:if="${r.mileageKm != null}" th:text="${r.mileageVehicleType} + ', ' + ${r.mileageKm} + ' km'">—</span>
+            </td>
+            <td class="text-end mono" th:text="${r.amount != null ? #numbers.formatDecimal(r.amount,1,'COMMA',2,'POINT') : '—'}">—</td>
+            <td class="text-end mono fw-600" th:text="${r.total != null ? #numbers.formatDecimal(r.total,1,'COMMA',2,'POINT') : '—'}">—</td>
+            <td>
+              <a th:if="${r.hasAttachment}" th:href="@{/claims/attachment/download/{f}(f=${r.attachmentPath})}"
+                 class="btn-action" title="Download receipt"><i class="bi bi-paperclip" style="color:var(--success)"></i></a>
+              <span th:unless="${r.hasAttachment}" style="color:var(--text-muted);font-size:.75rem">—</span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:#f8fafc">
+            <td colspan="5" class="text-end fw-600">Grand Total</td>
+            <td class="text-end fw-600 mono" th:text="${#numbers.formatDecimal(form.totalClaim != null ? form.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Balances -->
+  <div class="card-panel" th:if="${balances != null and !#lists.isEmpty(balances)}">
+    <div class="card-panel-header"><h2 class="card-panel-title"><i class="bi bi-bar-chart me-2"></i>Claim Records</h2></div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Type</th><th class="text-end">Enti/Year</th><th class="text-end">Claimed</th><th class="text-end">Balance</th></tr></thead>
+        <tbody>
+          <tr th:each="b : ${balances}">
+            <td th:text="${b.claimTitle}">—</td>
+            <td class="text-end mono" th:text="${#numbers.formatDecimal(b.entitled,1,'COMMA',2,'POINT')}">0.00</td>
+            <td class="text-end mono" th:text="${#numbers.formatDecimal(b.claimed,1,'COMMA',2,'POINT')}">0.00</td>
+            <td class="text-end mono fw-600"
+                th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? ' text-danger' : ' text-success'"
+                th:text="${#numbers.formatDecimal(b.balance,1,'COMMA',2,'POINT')}">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Audit Log -->
+  <div class="card-panel" th:if="${auditLogs != null and !#lists.isEmpty(auditLogs)}">
+    <div class="card-panel-header"><h2 class="card-panel-title"><i class="bi bi-clock-history me-2"></i>Claim History</h2></div>
+    <div style="padding:1.25rem 1.5rem">
+      <div class="timeline">
+        <div class="timeline-item" th:each="log : ${auditLogs}">
+          <div class="timeline-dot"
+               th:classappend="${log.status != null and (log.status.contains('APPROVED') or log.status.contains('PROCESSED'))} ? 'dot-green' :
+                               (${log.status != null and log.status.contains('REJECTED')} ? 'dot-red' :
+                               (${log.status == 'SUBMITTED'} ? 'dot-blue' : ''))">
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-action" th:text="${log.status != null ? log.status.replace('_',' ') : 'EVENT'}">—</div>
+            <div class="timeline-meta">
+              <span th:text="${log.staffId != null ? log.staffId : (log.projectManagerId != null ? log.projectManagerId : (log.approverId != null ? log.approverId : log.finance))}">—</span>
+              &nbsp;·&nbsp;
+              <span th:text="${log.createdDate != null ? #temporals.format(log.createdDate,'dd MMM yyyy, HH:mm') : '—'}">—</span>
+            </div>
+            <div class="timeline-remark" th:if="${log.remarks != null and !log.remarks.isBlank()}" th:text="${log.remarks}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<!-- Delete Modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:1rem">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+      <div style="width:44px;height:44px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="bi bi-trash3" style="color:#dc2626;font-size:1.2rem"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:1rem;color:#0f172a">Delete Draft</div>
+        <div style="font-size:.82rem;color:#64748b">This action cannot be undone</div>
+      </div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.25rem">
+      <p style="font-size:.875rem;color:#b91c1c;margin:0">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Are you sure you want to delete <strong id="deleteFormRef"></strong>?
+      </p>
+      <p style="font-size:.8rem;color:#b91c1c;margin:.5rem 0 0">
+        All claim rows and attached files will be permanently deleted.
+      </p>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button type="button" onclick="closeDeleteModal()"
+              style="padding:.6rem 1.25rem;border:1.5px solid #e2e8f0;border-radius:9px;background:#fff;cursor:pointer;font-size:.875rem;font-weight:600">
+        Cancel
+      </button>
+      <form id="deleteForm" method="post" style="display:inline">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" style="padding:.6rem 1.25rem;background:#dc2626;color:#fff;border:none;border-radius:9px;cursor:pointer;font-size:.875rem;font-weight:600">
+          <i class="bi bi-trash3"></i> Yes, Delete
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function confirmDelete(wfId, formId) {
+    document.getElementById('deleteFormRef').textContent = 'Form #' + formId;
+    document.getElementById('deleteForm').action = '/claims/' + wfId + '/delete';
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
+
+// Download dropdown
+function toggleDownloadDrop() {
+    const d = document.getElementById('downloadDrop');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('downloadDropWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('downloadDrop').style.display = 'none';
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('All Claims')}"></head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+  <div class="page-header">
+    <div><h1 class="page-title">All Claims</h1><p class="page-sub">Full system claim history</p></div>
+  </div>
+  <div class="card-panel">
+    <div class="card-panel-header">
+      <h2 class="card-panel-title"><i class="bi bi-archive me-2"></i>Claims</h2>
+      <div class="search-box"><i class="bi bi-search"></i><input type="text" id="searchInput" placeholder="Search..." oninput="filterTable()"/></div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table" id="claimsTable">
+        <thead><tr><th>Form No.</th><th>Staff</th><th>Department</th><th>Date</th><th>Status</th><th class="text-end">Total (RM)</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr th:each="c : ${claims}">
+            <td><span class="claim-ref" th:text="'Form #' + ${c.formId}">—</span></td>
+            <td th:text="${c.staffName}">—</td>
+            <td th:text="${c.department}">—</td>
+            <td th:text="${c.createdDate != null ? #temporals.format(c.createdDate,'dd MMM yyyy') : '—'}">—</td>
+            <td><span class="status-badge" th:classappend="'status-' + ${c.wfStatus.toLowerCase()}" th:text="${c.wfStatus.replace('_',' ')}">—</span></td>
+            <td class="text-end fw-600 mono" th:text="${#numbers.formatDecimal(c.totalClaim != null ? c.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
+            <td><div class="action-btns">
+              <a th:href="@{/claims/{id}(id=${c.workflowId})}" class="btn-action"><i class="bi bi-eye"></i></a>
+              <a th:href="@{/claims/pdf/{id}(id=${c.workflowId})}" class="btn-action"><i class="bi bi-file-pdf"></i></a>
+            </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+<script>
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('#claimsTable tbody tr').forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none');
+  }
+</script>
+</body>
+</html>

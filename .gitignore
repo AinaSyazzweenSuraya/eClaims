@@ -1,0 +1,18 @@
+# Compiled files
+*.class
+
+# Build folders
+target/
+build/
+
+# IDE configs
+*.iml
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Sensitive configs
+application.properties
+application.yml

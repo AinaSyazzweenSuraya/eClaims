@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><meta charset="UTF-8"/><title>Error — IFC E-Claims</title>
+<style>body{font-family:sans-serif;background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.error-box{text-align:center;max-width:460px;padding:2rem}
+.error-code{font-size:5rem;font-weight:800;color:#0f172a;line-height:1}
+.error-title{font-size:1.3rem;font-weight:700;margin:.75rem 0}
+.error-msg{color:#64748b;font-size:.95rem;line-height:1.6;margin-bottom:2rem}
+.btn{display:inline-flex;align-items:center;gap:.4rem;background:#2563eb;color:#fff;padding:.7rem 1.5rem;border-radius:9px;font-weight:600;text-decoration:none}</style>
+</head>
+<body>
+<div class="error-box">
+  <div th:if="${status == 403}"><div class="error-code">403</div><div class="error-title">Access Denied</div><p class="error-msg">You don't have permission to view this page.</p></div>
+  <div th:if="${status == 404}"><div class="error-code">404</div><div class="error-title">Page Not Found</div><p class="error-msg">The page you're looking for doesn't exist.</p></div>
+  <div th:if="${status != 403 and status != 404}"><div class="error-code" th:text="${status}">500</div><div class="error-title">Something Went Wrong</div><p class="error-msg">An unexpected error occurred. Please try again.</p></div>
+  <a href="/dashboard" class="btn">← Back to Dashboard</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Staff Registration')}"></head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Staff Registration</h1>
+      <p class="page-sub">Add a new staff member to the system</p>
+    </div>
+    <a href="/admin/users" class="btn-pdf">
+      <i class="bi bi-people"></i> Back to User Accounts
+    </a>
+  </div>
+
+  <div th:if="${successMsg}" class="alert-banner success" th:text="${successMsg}"></div>
+  <div th:if="${errorMsg}"   class="alert-banner danger"  th:text="${errorMsg}"></div>
+
+  <div class="card-panel" style="max-width:780px">
+    <div class="card-panel-header">
+      <h2 class="card-panel-title"><i class="bi bi-person-plus me-2"></i>New Staff Details</h2>
+    </div>
+    <div style="padding:1.5rem">
+      <form th:action="@{/admin/staff/register}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <!-- Section: Identity -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:.75rem;font-weight:700;color:#2563eb;text-transform:uppercase;
+                      letter-spacing:.06em;margin-bottom:1rem;padding-bottom:.5rem;
+                      border-bottom:2px solid #eff6ff">
+            Identity
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <label class="form-label-sm">Staff ID <span style="color:#dc2626">*</span></label>
+              <input type="text" name="staffId" class="form-input" required
+                     placeholder="e.g. INFO310" style="text-transform:uppercase"
+                     title="Staff ID will be converted to uppercase automatically"/>
+              <div style="font-size:.72rem;color:#94a3b8;margin-top:3px">
+                Must be unique — e.g. INFO310, DOCU145
+              </div>
+            </div>
+            <div>
+              <label class="form-label-sm">Full Name <span style="color:#dc2626">*</span></label>
+              <input type="text" name="name" class="form-input" required
+                     placeholder="e.g. Ahmad Bin Ali"/>
+            </div>
+            <div>
+              <label class="form-label-sm">Designation <span style="color:#dc2626">*</span></label>
+              <input type="text" name="designation" class="form-input" required
+                     placeholder="e.g. Software Developer"/>
+            </div>
+            <div>
+              <label class="form-label-sm">Gender <span style="color:#dc2626">*</span></label>
+              <select name="gender" class="form-input" required>
+                <option value="">Select...</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Organisation -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:.75rem;font-weight:700;color:#2563eb;text-transform:uppercase;
+                      letter-spacing:.06em;margin-bottom:1rem;padding-bottom:.5rem;
+                      border-bottom:2px solid #eff6ff">
+            Organisation
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <label class="form-label-sm">Department <span style="color:#dc2626">*</span></label>
+              <select name="departmentId" class="form-input" required>
+                <option value="">Select department...</option>
+                <option th:each="d : ${departments}"
+                        th:value="${d.departmentId}"
+                        th:text="${d.departmentName}">—</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label-sm">Company <span style="color:#dc2626">*</span></label>
+              <select name="companyId" class="form-input" required>
+                <option value="">Select company...</option>
+                <option th:each="c : ${companies}"
+                        th:value="${c.companyId}"
+                        th:text="${c.companyName}">—</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label-sm">Authorized Superior (Approver)</label>
+              <select name="approverId" class="form-input">
+                <option value="">Select superior...</option>
+                <option th:each="s : ${superiors}"
+                        th:value="${s.staffId}"
+                        th:text="${s.name} + ' (' + ${s.staffId} + ')'">—</option>
+              </select>
+              <div style="font-size:.72rem;color:#94a3b8;margin-top:3px">
+                Only active SUPERIOR role staff shown
+              </div>
+            </div>
+            <div>
+              <label class="form-label-sm">Category ID</label>
+              <input type="text" name="categoryId" class="form-input"
+                     placeholder="Optional — leave blank if not applicable"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Contact & Dates -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:.75rem;font-weight:700;color:#2563eb;text-transform:uppercase;
+                      letter-spacing:.06em;margin-bottom:1rem;padding-bottom:.5rem;
+                      border-bottom:2px solid #eff6ff">
+            Contact &amp; Dates
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <label class="form-label-sm">Email <span style="color:#dc2626">*</span></label>
+              <input type="email" name="email" class="form-input" required
+                     placeholder="e.g. ahmad@infoconnect.com.my"/>
+            </div>
+            <div>
+              <label class="form-label-sm">Date Joined <span style="color:#dc2626">*</span></label>
+              <input type="date" name="dateJoined" class="form-input" required/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info note -->
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;
+                    padding:.85rem 1rem;margin-bottom:1.5rem;
+                    display:flex;gap:10px;align-items:flex-start">
+          <i class="bi bi-info-circle-fill" style="color:#2563eb;font-size:1rem;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:.82rem;color:#1e40af">
+            After registration, you will be redirected to <strong>User Accounts</strong>
+            where you can immediately create a login account for this staff member.
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+          <a href="/admin/users"
+             style="padding:.65rem 1.25rem;border:1.5px solid #e2e8f0;border-radius:9px;
+                    background:#fff;cursor:pointer;font-size:.875rem;font-weight:600;
+                    color:#0f172a;text-decoration:none">
+            Cancel
+          </a>
+          <button type="submit" class="btn-approve">
+            <i class="bi bi-person-plus me-1"></i> Register Staff
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+</body>
+</html>
