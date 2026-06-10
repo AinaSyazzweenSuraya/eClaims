@@ -62,7 +62,7 @@
         <i class="bi bi-archive"></i> All Claims
       </a>
     </li>
-    <li sec:authorize="hasRole('ADMIN')">
+     <li th:if="${!phase1}" sec:authorize="hasAnyRole('FINANCE','ADMIN')">
       <a th:href="@{/admin/staff/register}" th:classappend="${activePage == 'adminStaffRegister'} ? ' active' : ''">
         <i class="bi bi-person-plus"></i> Register Staff
       </a>

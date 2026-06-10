@@ -105,7 +105,7 @@ public class PdfService {
         dbRowsBySection.put("OTHERS",  new ArrayList<>());
         for (ClaimFormRow r : allRows) {
             switch (r.getClaimId()) {
-                case "CL05","CL06","CL07" -> dbRowsBySection.get("MEDICAL").add(r);
+                case "CL05","CL06","CL07","CL13","CL14" -> dbRowsBySection.get("MEDICAL").add(r);
                 case "CL01","CL02"         -> dbRowsBySection.get("MEAL").add(r);
                 case "CL12"                -> dbRowsBySection.get("TRAVEL").add(r);
                 default                    -> dbRowsBySection.get("OTHERS").add(r);
@@ -202,11 +202,11 @@ public class PdfService {
         PdfPTable infoTbl = new PdfPTable(2);
         infoTbl.setWidthPercentage(100); infoTbl.setWidths(new float[]{2.5f, 1.5f}); infoTbl.setSpacingAfter(10);
         PdfPCell staffCell = new PdfPCell();
-        staffCell.setBackgroundColor(new BaseColor(15,21,35)); staffCell.setBorder(Rectangle.BOX); staffCell.setPadding(8);
-        staffCell.setBorderColor(new BaseColor(37,99,235));
-        com.itextpdf.text.Font fSL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, new BaseColor(148,163,184));
-        com.itextpdf.text.Font fSV = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.WHITE);
-        com.itextpdf.text.Font fSH = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new BaseColor(96,165,250));
+        staffCell.setBackgroundColor(new BaseColor(245, 247, 250)); staffCell.setBorder(Rectangle.BOX); staffCell.setPadding(8);
+        staffCell.setBorderColor(new BaseColor(200, 210, 225));
+        com.itextpdf.text.Font fSL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, new BaseColor(80, 80, 80));
+        com.itextpdf.text.Font fSV = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
+        com.itextpdf.text.Font fSH = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new BaseColor(59, 130, 246));
         staffCell.addElement(new Phrase("STAFF CLAIM", fSH)); staffCell.addElement(Chunk.NEWLINE);
         addInfoLine(staffCell,"Staff ID",    form.getStaffId(),    fSL,fSV);
         addInfoLine(staffCell,"Name",        form.getStaffName(),  fSL,fSV);
@@ -438,12 +438,12 @@ public class PdfService {
         infoTbl.setSpacingAfter(10);
 
         PdfPCell staffCell = new PdfPCell();
-        staffCell.setBackgroundColor(new BaseColor(15, 21, 35));
+        staffCell.setBackgroundColor(new BaseColor(245, 247, 250)); // light background
         staffCell.setBorder(Rectangle.BOX); staffCell.setPadding(8);
-        staffCell.setBorderColor(new BaseColor(37, 99, 235));
-        com.itextpdf.text.Font fStaffLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, new BaseColor(148,163,184));
-        com.itextpdf.text.Font fStaffValue = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.WHITE);
-        com.itextpdf.text.Font fStaffHead  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new BaseColor(96,165,250));
+        staffCell.setBorderColor(new BaseColor(200, 210, 225));
+        com.itextpdf.text.Font fStaffLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, new BaseColor(80, 80, 80));
+        com.itextpdf.text.Font fStaffValue = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
+        com.itextpdf.text.Font fStaffHead  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new BaseColor(59, 130, 246));
         staffCell.addElement(new Phrase("STAFF CLAIM", fStaffHead));
         staffCell.addElement(Chunk.NEWLINE);
         addInfoLine(staffCell, "Staff ID",    form.getStaffId(),    fStaffLabel, fStaffValue);
@@ -697,7 +697,7 @@ public class PdfService {
         map.put("TRAVEL",  new ArrayList<>()); map.put("OTHERS", new ArrayList<>());
         for (ClaimRowDto r : rows) {
             switch (r.getClaimId()) {
-                case "CL05", "CL06", "CL07" -> map.get("MEDICAL").add(r);
+                case "CL05", "CL06", "CL07", "CL13", "CL14" -> map.get("MEDICAL").add(r);
                 case "CL01", "CL02"          -> map.get("MEAL").add(r);
                 case "CL12"                  -> map.get("TRAVEL").add(r);
                 default                      -> map.get("OTHERS").add(r);

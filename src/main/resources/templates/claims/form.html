@@ -11,11 +11,12 @@
       <p class="page-sub" id="formIdDisplay"
          th:text="${form != null and form.formId != null} ? 'Form #' + ${form.formId} : 'New Claim'">New Claim</p>
     </div>
-    <div style="display:flex;gap:.75rem" th:if="${form != null and form.workflowId != null}">
+    <!-- hide download button -->
+    <!-- <div style="display:flex;gap:.75rem" th:if="${form != null and form.workflowId != null}">
       <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}" class="btn-pdf">
         <i class="bi bi-file-pdf"></i> Download PDF
       </a>
-    </div>
+    </div>  -->
   </div>
 
   <!-- Hidden fields -->
@@ -24,7 +25,9 @@
 
   <!-- ── Staff Info Banner ── -->
   <div class="form-section" style="margin-bottom:1.25rem">
-    <div style="background:#0f1523;padding:1rem 1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem">
+<div style="background:#0f1523;padding:1rem 1.5rem;display:grid;
+            grid-template-columns: 120px 1.5fr 1fr 1fr 1fr 140px;
+            gap:.75rem">
       <div>
         <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Staff ID</div>
         <div style="color:#fff;font-weight:700;font-family:var(--font-mono)" th:text="${staff.staffId}">—</div>
@@ -65,8 +68,8 @@
         <thead>
           <tr>
             <th style="width:110px">Date</th>
-            <th style="width:160px">Claim Type</th>
-            <th>Clinic name & Description</th>
+            <th style="width:220px">Claim Type</th>
+			<th style="width:260px">Clinic name & Description</th>
             <th style="width:110px">Amount (RM)</th>
             <th style="width:110px">Total (RM)</th>
             <th style="width:40px">Attach</th>
@@ -94,7 +97,7 @@
         <thead>
           <tr>
             <th style="width:110px">Date</th>
-            <th style="width:150px">Claim Type</th>
+            <th style="width:220px">Claim Type</th>
             <th>Description</th>
             <th style="width:90px">Time From</th>
             <th style="width:90px">Time To</th>
@@ -127,7 +130,7 @@
           <tr>
             <th style="width:110px">Date</th>
             <th style="width:160px">Location</th>
-            <th style="width:180px">Meal Allowance</th>
+            <th style="width:240px">Meal Allowance</th>
             <th style="width:100px">Limit (RM)</th>
             <th style="width:100px">Total (RM)</th>
             <th style="width:40px">Attach</th>
@@ -155,8 +158,8 @@
         <thead>
           <tr>
             <th style="width:110px">Date</th>
-            <th style="width:180px">Claim Type</th>
-            <th>Description / Mileage Details</th>
+            <th style="width:240px">Claim Type</th>
+            <th style="width:260px">Description / Mileage Details</th>
             <th style="width:120px">Amount (RM)</th>
             <th style="width:120px">Total (RM)</th>
             <th style="width:40px">Attach</th>

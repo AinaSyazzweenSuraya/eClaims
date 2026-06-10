@@ -33,6 +33,8 @@ function addRow(sectionId) {
 
 function deleteRow(btn) {
     const tr = btn.closest('tr');
+    const ok = confirm('This row will be removed. Do you want to continue?');
+    if (!ok) return;
     tr.remove();
     updateTotals();
 }
@@ -109,7 +111,7 @@ function buildRowHtml(sectionId, n) {
 
 function buildClaimTypeOptions(sectionId) {
     const groups = {
-        medicalSection: ['CL05','CL06','CL07'],
+        medicalSection: ['CL05','CL06','CL07','CL13','CL14'],
         mealSection:    ['CL01','CL02'],
         othersSection:  ['CL03','CL04','CL08','CL09','CL10','CL11']
     };
@@ -192,11 +194,46 @@ function onClaimTypeChange(select) {
 // ================================================================
 // CALCULATIONS
 // ================================================================
+function format2Decimals(input) {
+    const value = parseFloat(input.value);
+    if (!isNaN(value)) {
+        input.value = value.toFixed(2);
+    }
+}
 
-function syncMedicalTotal(input) {
+/*function syncMedicalTotal(input) {
     const tr    = input.closest('tr');
     const total = tr.querySelector('.row-total');
     if (total) total.value = parseFloat(input.value || 0).toFixed(2);
+    updateTotals();
+}*/
+function syncMedicalTotal(input) {
+    const tr = input.closest('tr');
+    const total = tr.querySelector('.row-total');
+
+    let raw = input.value;
+
+    // ignore empty
+    if (!raw) {
+        if (total) total.value = '';
+        updateTotals();
+        return;
+    }
+
+    // remove non-digits (safety)
+    raw = raw.replace(/[^\d]/g, '');
+
+    // convert cents → RM
+    const formatted = (parseInt(raw, 10) / 100).toFixed(2);
+
+    // update input display
+    input.value = formatted;
+
+    // keep total same behavior as before
+    if (total) {
+        total.value = formatted;
+    }
+
     updateTotals();
 }
 
@@ -517,7 +554,7 @@ function loadExistingRows() {
         const id = row.claimId;
 
         let sectionId;
-        if (['CL05','CL06','CL07'].includes(id)) sectionId = 'medicalSection';
+        if (['CL05','CL06','CL07','CL13','CL14'].includes(id)) sectionId = 'medicalSection';
         else if (['CL01','CL02'].includes(id))    sectionId = 'mealSection';
         else if (id === 'CL12')                    sectionId = 'travelSection';
         else                                       sectionId = 'othersSection';
@@ -544,7 +581,12 @@ function loadExistingRows() {
         }
 
         if (sectionId === 'medicalSection') {
-            setVal(tr, '.row-panel-clinic', row.medicalClinic || '');
+            //setVal(tr, '.row-panel-clinic', row.medicalClinic || '');
+			setVal(
+				tr,
+				'.row-amount',
+				row.amount != null ? parseFloat(row.amount).toFixed(2) : ''
+			);
             const amtEl = tr.querySelector('.row-amount');
             const totEl = tr.querySelector('.row-total');
             if (amtEl && totEl && amtEl.value && !totEl.value) {
