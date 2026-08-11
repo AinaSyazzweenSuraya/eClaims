@@ -1,10 +1,18 @@
 package com.eclaims.controller;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import com.eclaims.service.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,11 +43,6 @@ import com.eclaims.repository.PanelMedicalRepository;
 import com.eclaims.repository.ProjectManagerRepository;
 import com.eclaims.repository.TravelLocationRepository;
 import com.eclaims.repository.TravelMealRepository;
-import com.eclaims.service.AttachmentService;
-import com.eclaims.service.CalculationService;
-import com.eclaims.service.ClaimService;
-import com.eclaims.service.PdfService;
-import com.eclaims.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -61,30 +64,31 @@ public class ClaimController {
     private final TravelLocationRepository  travelLocationRepository;
     private final TravelMealRepository      travelMealRepository;
     private final ProjectManagerRepository  pmRepository;
+    private final PdfPageExtractionService pdfPageExtractionService;
 
     // ── New claim form ──────────────────────────────────────────
     @GetMapping("/new")
     public String newClaim(@AuthenticationPrincipal UserDetails user,
-                            org.springframework.web.servlet.mvc.support.RedirectAttributes ra,
+                            @RequestParam(required = false) String month,
                             Model model) {
+
         StaffInfo staff = userService.getStaffByUsername(user.getUsername());
 
-        // Check if staff already has an existing DRAFT
-        List<com.eclaims.dto.ClaimFormDto> claims = claimService.getClaimsForStaff(staff.getStaffId());
-        java.util.Optional<com.eclaims.dto.ClaimFormDto> existingDraft = claims.stream()
-            .filter(c -> "DRAFT".equals(c.getWfStatus()))
-            .findFirst();
+        if (month == null || month.isBlank()){
+            return "redirect:/dashboard";
+        }
 
-        if (existingDraft.isPresent()) {
-            com.eclaims.dto.ClaimFormDto draft = existingDraft.get();
-            ra.addFlashAttribute("draftWarning", true);
-            ra.addFlashAttribute("draftWorkflowId", draft.getWorkflowId());
-            ra.addFlashAttribute("draftFormId",     draft.getFormId());
+        try {
+            YearMonth claimMonth = YearMonth.parse(month);
+
+            model.addAttribute("claimMonth", claimMonth.toString());
+        } catch (DateTimeParseException e){
             return "redirect:/dashboard";
         }
 
         addFormModel(model, null, staff);
         model.addAttribute("activePage", "newClaim");
+
         return "claims/form";
     }
 
@@ -248,17 +252,88 @@ public class ClaimController {
         response.getOutputStream().write(pdf);
     }
 
+    @GetMapping("/admin/view-page/{workflowId}")
+    public String viewPdfPage(@PathVariable String workflowId,
+                              @AuthenticationPrincipal UserDetails user,
+                              Model model) {
+        ClaimFormDto form = claimService.loadForm(workflowId);
+        if (!canAccess(form.getStaffId(), user)) {
+            return "redirect:/dashboard";
+        }
+        model.addAttribute("workflowId", workflowId);
+        return "admin/view-page";
+    }
+
+    // ── Download selected pages from full claim PDF ─────────────
+    @GetMapping("/pdf/{workflowId}/pages")
+    public ResponseEntity<byte[]> downloadSelectedPages(
+            @PathVariable String workflowId,
+            @RequestParam String pages,
+            @AuthenticationPrincipal UserDetails user) {
+
+        ClaimFormDto form = claimService.loadForm(workflowId);
+
+        if (!canAccess(form.getStaffId(), user)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        List<Integer> pageNumbers;
+        try {
+            pageNumbers = Arrays.stream(pages.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank())
+                    .map(Integer::parseInt)
+                    .sorted()
+                    .toList();
+            if (pageNumbers.isEmpty()) {
+                return ResponseEntity.badRequest().body(null);
+            }
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        byte[] extractedPdf;
+        try {
+            byte[] originalPdf = pdfService.generateFullPdf(workflowId);
+            extractedPdf = pdfPageExtractionService.extractPages(originalPdf, pageNumbers);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+
+        String filename = "claim-" + workflowId + "-pages-" + pages.replace(",", "_") + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(extractedPdf);
+    }
+
     // ── AJAX: calculate meal ────────────────────────────────────
     @GetMapping("/api/calc/meal")
     @ResponseBody
     public ResponseEntity<?> calcMeal(@RequestParam String claimId,
                                        @RequestParam String timeFrom,
                                        @RequestParam String timeTo) {
+
         BigDecimal hours = calcService.calcHours(timeFrom, timeTo);
-        BigDecimal total = "CL01".equals(claimId)
-            ? calcService.calcMealWeekday(hours)
-            : calcService.calcMealHoliday(hours);
-        return ResponseEntity.ok(Map.of("hours", hours, "total", total));
+        BigDecimal total;
+
+        if ("CL01".equals(claimId)) {
+            total = calcService.calcMealWeekday(hours);
+        } else if ("CL02".equals(claimId)) {
+            total = calcService.calcMealHoliday(hours);
+        } else {
+            total = BigDecimal.ZERO;
+        }
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "hours", hours,
+                        "total", total
+                )
+        );
     }
 
     // ── AJAX: calculate mileage ─────────────────────────────────

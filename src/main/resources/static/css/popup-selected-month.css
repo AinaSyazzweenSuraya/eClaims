@@ -1,0 +1,144 @@
+/* ── Claim Month Selection Modal (popup) ─────────────────────── */
+
+.month-modal-overlay {
+    display: none;              /* hidden by default — this is what makes it a popup */
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Shown via JS: classList.add('is-open') */
+.month-modal-overlay.is-open {
+    display: flex;
+}
+
+.month-modal-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+    margin: 1rem;
+    animation: monthModalPop .18s ease;
+}
+
+@keyframes monthModalPop {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.month-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+}
+
+.month-modal-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+.month-modal-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0f172a;
+}
+
+.month-modal-subtitle {
+    font-size: .82rem;
+    color: #64748b;
+}
+
+.month-modal-body {
+    margin-bottom: 1.5rem;
+}
+
+.month-modal-label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: .4rem;
+}
+
+.month-modal-input {
+    width: 100%;
+    padding: .65rem .85rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    font-size: .9rem;
+    font-family: inherit;
+    color: #0f172a;
+    outline: none;
+    transition: border-color .15s ease;
+}
+
+.month-modal-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.month-modal-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .78rem;
+    color: #94a3b8;
+    margin: .6rem 0 0;
+}
+
+.month-modal-actions {
+    display: flex;
+    gap: .75rem;
+    justify-content: flex-end;
+}
+
+.month-modal-btn-cancel {
+    padding: .6rem 1.25rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+    font-size: .875rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #334155;
+    transition: background .15s ease;
+}
+
+.month-modal-btn-cancel:hover {
+    background: #f8fafc;
+}
+
+.month-modal-btn-confirm {
+    padding: .6rem 1.25rem;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: .875rem;
+    font-weight: 600;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s ease;
+}
+
+.month-modal-btn-confirm:hover {
+    background: #1d4ed8;
+}

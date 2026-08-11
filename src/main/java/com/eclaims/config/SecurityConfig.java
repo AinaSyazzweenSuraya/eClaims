@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/finance/**").hasAnyRole("FINANCE","ADMIN")
                 .requestMatchers("/approval/superior/**").hasAnyRole("SUPERIOR","ADMIN")
                 .requestMatchers("/approval/pm/**").hasAnyRole("MANAGER","SUPERIOR","ADMIN")
+                .requestMatchers("/forgot-password", "/reset-password").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

@@ -543,3 +543,404 @@ body.dark-mode .sk-card { background: #1e293b; border-color: #334155; }
 /* Fade in actual content after skeleton hides */
 .content-hidden { opacity: 0; transition: opacity .3s ease; }
 .content-visible { opacity: 1; }
+
+/* ============================================================
+   view-page.css
+   Scoped styles for the PDF page-selection screen.
+   All classes prefixed "pdfsel-" so they cannot collide with
+   any existing global CSS (.btn-action, .card-panel-header, etc).
+   ============================================================ */
+
+.pdfsel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 28px 32px 20px;
+}
+.pdfsel-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+}
+.pdfsel-subtitle {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+}
+.pdfsel-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.pdfsel-back-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+.pdfsel-panel {
+  margin: 0 32px 32px;
+  background: #111a30;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 24px 28px 28px;
+}
+
+.pdfsel-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+.pdfsel-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+.pdfsel-toolbar-title i {
+  color: #ef4444;
+  font-size: 1.3rem;
+}
+.pdfsel-page-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #93c5fd;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+.pdfsel-toolbar-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+}
+.pdfsel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.pdfsel-btn-ghost {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+  color: #e2e8f0;
+}
+.pdfsel-btn-ghost:hover {
+  background: rgba(255,255,255,0.12);
+}
+.pdfsel-btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+}
+.pdfsel-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.5);
+}
+.pdfsel-btn-primary:disabled {
+  background: #334155;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.pdfsel-hint {
+  font-size: 0.83rem;
+  color: #8a94a6;
+  margin: 10px 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdfsel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 0;
+  color: #94a3b8;
+  grid-column: 1 / -1;
+}
+.pdfsel-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: pdfsel-spin 0.8s linear infinite;
+}
+@keyframes pdfsel-spin {
+  to { transform: rotate(360deg); }
+}
+
+.pdfsel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 20px;
+}
+
+.pdfsel-card {
+  position: relative;
+  background: #0b1120;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.pdfsel-card:hover {
+  border-color: rgba(59,130,246,0.4);
+  transform: translateY(-2px);
+}
+.pdfsel-card.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+.pdfsel-thumb-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  cursor: zoom-in;
+  background: #fff;
+}
+.pdfsel-thumb-wrap canvas {
+  width: 100%;
+  display: block;
+}
+.pdfsel-thumb-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 0.15s ease;
+  pointer-events: none;
+}
+.pdfsel-thumb-wrap:hover::after {
+  background: rgba(0,0,0,0.12);
+}
+
+.pdfsel-checkbox-wrap {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+.pdfsel-checkbox-wrap input {
+  width: 22px;
+  height: 22px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.pdfsel-zoom-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 2;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.pdfsel-thumb-wrap:hover .pdfsel-zoom-btn {
+  opacity: 1;
+}
+
+.pdfsel-page-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+/* ============================================================
+   Zoom modal
+   ============================================================ */
+.pdfsel-zoom-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.pdfsel-zoom-overlay.active {
+  display: flex;
+}
+.pdfsel-zoom-modal {
+  background: #12172a;
+  border-radius: 12px;
+  max-width: 92vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+.pdfsel-zoom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  color: #fff;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.pdfsel-zoom-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.pdfsel-zoom-close:hover {
+  color: #fff;
+}
+
+/* CHANGED: was align-items: center — now flex-start so the canvas
+   wrapper can grow/scroll independently without being vertically
+   centered/clipped by the flex row */
+.pdfsel-zoom-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  overflow: auto;
+  max-height: 78vh;
+}
+
+/* NEW: wrapper around the canvas — this is what scrolls/pans when
+   zoomed in, and carries the shadow that used to sit on the canvas
+   directly */
+.pdfsel-zoom-canvas-wrap {
+  overflow: auto;
+  max-width: 100%;
+  max-height: 78vh;
+  border-radius: 6px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+/* CHANGED: replaces the old ".pdfsel-zoom-body canvas" rule.
+   No more max-width/max-height on the canvas itself — that was
+   causing the browser to downscale (blur) an already-rendered
+   image. The canvas's actual pixel size is now set directly by
+   the JS (devicePixelRatio-aware), and this wrapper handles the
+   visible sizing/scroll instead. */
+.pdfsel-zoom-canvas-wrap canvas {
+  display: block;
+}
+
+/* NEW: zoom level +/- controls bar between the image and the
+   "select this page" footer */
+.pdfsel-zoom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.pdfsel-zoom-zoombtn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.pdfsel-zoom-zoombtn:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+.pdfsel-zoom-nav {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  font-size: 1.8rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.pdfsel-zoom-nav:hover {
+  background: rgba(255,255,255,0.22);
+}
+.pdfsel-zoom-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.pdfsel-zoom-select-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: #e2e8f0;
+}
+.pdfsel-zoom-select-label input {
+  accent-color: #3b82f6;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .pdfsel-header { flex-direction: column; }
+  .pdfsel-toolbar-actions { width: 100%; }
+  .pdfsel-btn { flex: 1; justify-content: center; }
+}

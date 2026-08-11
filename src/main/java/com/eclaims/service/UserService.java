@@ -3,13 +3,16 @@ package com.eclaims.service;
 import com.eclaims.entity.*;
 import com.eclaims.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -19,6 +22,8 @@ public class UserService {
     private final DepartmentRepository   departmentRepository;
     private final CompanyRepository      companyRepository;
     private final PasswordEncoder        passwordEncoder;
+    private final PasswordResetRepository passwordResetRepository;
+    private final EmailService emailService;
 
     public UserAccount getByUsername(String username) {
         return userAccountRepository.findByUsername(username).orElse(null);
@@ -132,5 +137,160 @@ public class UserService {
             .filter(java.util.Objects::nonNull)
             .sorted(java.util.Comparator.comparing(StaffInfo::getName))
             .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Process Forgot Password request.
+     * 1. Find UserAccount using Staff ID
+     * 2. Get registered email
+     * 3. Generate secure reset token
+     * 4. Save token
+     * 5. Send reset email
+     */
+    @Transactional
+    public void processForgotPassword(String staffId) {
+
+        // Find staff using Staff ID
+        StaffInfo staff = staffInfoRepository
+                .findById(staffId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Staff ID not found: " + staffId
+                        )
+                );
+
+        String email = staff.getEmail();
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException(
+                    "No email address registered for Staff ID: " + staffId
+            );
+        }
+
+        // Check that UserAccount exists using Staff ID
+        UserAccount userAccount = userAccountRepository
+                .findByStaffId(staffId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "User account not found for Staff ID: " + staffId
+                        )
+                );
+
+        // Delete old reset token
+        passwordResetRepository.deleteByStaffId(staffId);
+
+        // Generate token
+        String token = UUID.randomUUID().toString();
+
+        LocalDateTime expiryDate =
+                LocalDateTime.now().plusMinutes(30);
+
+        PasswordReset resetToken =
+                PasswordReset.builder()
+                        .staffId(staffId)
+                        .token(token)
+                        .expiryDate(expiryDate)
+                        .used(false)
+                        .dateCreated(LocalDateTime.now())
+                        .build();
+
+        passwordResetRepository.save(resetToken);
+
+        String resetLink =
+                "http://localhost:8081/reset-password?token="
+                        + token;
+
+        emailService.sendPasswordResetEmail(
+                email,
+                resetLink
+        );
+    }
+
+    /**
+     * Validates a password reset token.
+     */
+    public PasswordReset validateResetToken(String token) {
+
+        PasswordReset resetToken =
+                passwordResetRepository
+                        .findByToken(token)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Invalid password reset token"
+                                )
+                        );
+
+        // Check if token has already been used
+        if (resetToken.isUsed()) {
+            throw new IllegalArgumentException(
+                    "Password reset token has already been used"
+            );
+        }
+
+        // Check expiry
+        if (resetToken.getExpiryDate()
+                .isBefore(LocalDateTime.now())) {
+
+            throw new IllegalArgumentException(
+                    "Password reset token has expired"
+            );
+        }
+
+        return resetToken;
+    }
+
+
+    /**
+     * Reset password using a valid reset token.
+     */
+    @Transactional
+    public void resetPassword(
+            String token,
+            String newPassword) {
+
+        // Validate token
+        PasswordReset resetToken =
+                validateResetToken(token);
+
+        // Find user account using Staff ID
+        UserAccount userAccount =
+                userAccountRepository
+                        .findByStaffId(
+                                resetToken.getStaffId()
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "User account not found for Staff ID: "
+                                                + resetToken.getStaffId()
+                                )
+                        );
+
+        log.info(
+                "User account found for password reset. Staff ID: {}",
+                resetToken.getStaffId()
+        );
+
+        // Encode new password
+        userAccount.setPassword(
+                passwordEncoder.encode(newPassword)
+        );
+
+        // Save updated password
+        userAccountRepository.save(userAccount);
+
+        log.info(
+                "Password updated successfully for Staff ID: {}",
+                resetToken.getStaffId()
+        );
+
+        // Mark token as used
+        resetToken.setUsed(true);
+
+        passwordResetRepository.save(resetToken);
+
+        log.info(
+                "Password reset token marked as used for Staff ID: {}",
+                resetToken.getStaffId()
+        );
     }
 }

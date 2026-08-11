@@ -43,4 +43,8 @@ public class StaffClaimInfo {
     @Column(name = "TravelEntiledPerYear",       precision=13,scale=2) private BigDecimal travelEntitled;
     @Column(name = "TravelClaimed",              precision=13,scale=2) private BigDecimal travelClaimed;
     @Column(name = "TravelBalance",              precision=13,scale=2) private BigDecimal travelBalance;
+    @Column(name = "OpticalEntiledPerYear", precision=13,scale=2) private BigDecimal opticalEntitled;
+    @Column(name = "OpticalClaimed",        precision=13,scale=2) private BigDecimal opticalClaimed;
+    @Column(name = "OpticalBalance",        precision=13,scale=2) private BigDecimal opticalBalance;
+
 }

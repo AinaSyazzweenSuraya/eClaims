@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" th:href="@{/css/main.css}"/>
+  <!-- Claim Month popup styling — needed wherever the sidebar's New Claim link/button appears -->
+  <link rel="stylesheet" th:href="@{/css/popup-selected-month.css}"/>
   <!-- Skeleton loader — loaded first so it shows immediately -->
   <script th:src="@{/js/skeleton.js}"></script>
 </head>
@@ -32,7 +34,8 @@
       </a>
     </li>
     <li>
-      <a th:href="@{/claims/new}" th:classappend="${activePage == 'newClaim'} ? ' active' : ''">
+      <a href="javascript:void(0)" onclick="openClaimMonth()"
+         th:classappend="${activePage == 'newClaim'} ? ' active' : ''">
         <i class="bi bi-plus-circle"></i> New Claim
       </a>
     </li>
@@ -142,49 +145,86 @@
     </div>
   </div>
 
+  <!-- ── Claim Month Selection Modal (popup, hidden by default) ──────────── -->
+  <!-- Centralized here so it's available from any page that renders the sidebar,
+       including the sidebar's own "New Claim" link and the Dashboard's "New Claim" button -->
+  <div id="monthSelectModal" class="month-modal-overlay">
+    <div class="month-modal-box">
+
+      <div class="month-modal-header">
+        <div class="month-modal-icon">
+          <i class="bi bi-calendar-event"></i>
+        </div>
+        <div>
+          <div class="month-modal-title">Select Claim Month</div>
+          <div class="month-modal-subtitle">Your claim form will be based on this month</div>
+        </div>
+      </div>
+
+      <div class="month-modal-body">
+        <label for="claimMonthInput" class="month-modal-label">Claim Month</label>
+        <input type="month" id="claimMonthInput" class="month-modal-input"/>
+        <p class="month-modal-hint">
+          <i class="bi bi-info-circle"></i>
+          You can only have one draft claim per month.
+        </p>
+      </div>
+
+      <div class="month-modal-actions">
+        <button type="button" class="month-modal-btn-cancel" onclick="closeClaimMonthModal()">
+          Cancel
+        </button>
+        <button type="button" class="month-modal-btn-confirm" onclick="proceedToClaimForm()">
+          <i class="bi bi-arrow-right-circle"></i> Continue
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Dark Mode Script — INSIDE nav fragment so Thymeleaf renders it -->
   <script th:inline="none">
-  function toggleDarkMode() {
+    function toggleDarkMode() {
       const isDark = document.body.classList.toggle('dark-mode');
       localStorage.setItem('eclaims-dark', isDark ? '1' : '0');
       updateDarkIcon(isDark);
-  }
+    }
 
-  function updateDarkIcon(isDark) {
+    function updateDarkIcon(isDark) {
       const icon  = document.getElementById('darkIcon');
       const label = document.getElementById('darkLabel');
       if (!icon || !label) return;
       icon.className    = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
       label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-  }
+    }
 
-  // Apply saved preference on every page load
-  (function () {
+    // Apply saved preference on every page load
+    (function () {
       if (localStorage.getItem('eclaims-dark') === '1') {
-          document.body.classList.add('dark-mode');
-          document.addEventListener('DOMContentLoaded', function () {
-              updateDarkIcon(true);
-          });
+        document.body.classList.add('dark-mode');
+        document.addEventListener('DOMContentLoaded', function () {
+          updateDarkIcon(true);
+        });
       }
-  })();
+    })();
 
-  // ── Session Timeout Logic ──────────────────────────────────────
-  // Spring Boot default session = 30 mins (1800s)
-  // We warn 2 mins (120s) before expiry → start warning at 28 mins (1680s)
-  var SESSION_DURATION_MS  = 30 * 60 * 1000; // 30 minutes
-  var WARNING_BEFORE_MS    =  2 * 60 * 1000; // warn 2 mins before
-  var sessionTimer         = null;
-  var countdownTimer       = null;
-  var sessionStart         = Date.now();
+    // ── Session Timeout Logic ──────────────────────────────────────
+    // Spring Boot default session = 30 mins (1800s)
+    // We warn 2 mins (120s) before expiry → start warning at 28 mins (1680s)
+    var SESSION_DURATION_MS  = 30 * 60 * 1000; // 30 minutes
+    var WARNING_BEFORE_MS    =  2 * 60 * 1000; // warn 2 mins before
+    var sessionTimer         = null;
+    var countdownTimer       = null;
+    var sessionStart         = Date.now();
 
-  function startSessionTimer() {
+    function startSessionTimer() {
       clearTimeout(sessionTimer);
       sessionTimer = setTimeout(function() {
-          showSessionWarning();
+        showSessionWarning();
       }, SESSION_DURATION_MS - WARNING_BEFORE_MS);
-  }
+    }
 
-  function showSessionWarning() {
+    function showSessionWarning() {
       var modal = document.getElementById('sessionModal');
       if (!modal) return;
       modal.style.display = 'flex';
@@ -194,17 +234,17 @@
       updateCountdown(remaining);
 
       countdownTimer = setInterval(function() {
-          remaining--;
-          updateCountdown(remaining);
-          if (remaining <= 0) {
-              clearInterval(countdownTimer);
-              // Auto logout when time runs out
-              window.location.href = '/logout';
-          }
+        remaining--;
+        updateCountdown(remaining);
+        if (remaining <= 0) {
+          clearInterval(countdownTimer);
+          // Auto logout when time runs out
+          window.location.href = '/logout';
+        }
       }, 1000);
-  }
+    }
 
-  function updateCountdown(seconds) {
+    function updateCountdown(seconds) {
       var el = document.getElementById('sessionCountdown');
       if (!el) return;
       var m = Math.floor(seconds / 60);
@@ -212,41 +252,81 @@
       el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
       // Turn red in last 30 seconds
       el.style.color = seconds <= 30 ? '#dc2626' : '#d97706';
-  }
+    }
 
-  function keepAlive() {
+    function keepAlive() {
       // Hit a lightweight endpoint to reset server session
       fetch('/dashboard', { method: 'GET', credentials: 'same-origin' })
-          .catch(function() {});
+              .catch(function() {});
       clearInterval(countdownTimer);
       var modal = document.getElementById('sessionModal');
       if (modal) modal.style.display = 'none';
       sessionStart = Date.now();
       startSessionTimer();
-  }
+    }
 
-  // Reset timer on any user activity
-  function resetSessionTimer() {
+    // Reset timer on any user activity
+    function resetSessionTimer() {
       sessionStart = Date.now();
       clearTimeout(sessionTimer);
       startSessionTimer();
-  }
+    }
 
-  // Start timer when page loads
-  document.addEventListener('DOMContentLoaded', function() {
+    // Start timer when page loads
+    document.addEventListener('DOMContentLoaded', function() {
       startSessionTimer();
       // Reset on mouse move, click, keypress — throttled to once per minute
       var lastActivity = Date.now();
       ['mousemove','click','keypress','scroll','touchstart'].forEach(function(evt) {
-          document.addEventListener(evt, function() {
-              var now = Date.now();
-              if (now - lastActivity > 60000) { // throttle: max once per minute
-                  lastActivity = now;
-                  resetSessionTimer();
-              }
-          }, { passive: true });
+        document.addEventListener(evt, function() {
+          var now = Date.now();
+          if (now - lastActivity > 60000) { // throttle: max once per minute
+            lastActivity = now;
+            resetSessionTimer();
+          }
+        }, { passive: true });
       });
-  });
+    });
+
+    // ── Claim Month Popup Logic ─────────────────────────────────────
+    function openClaimMonth() {
+      const input = document.getElementById('claimMonthInput');
+      if (!input) return;
+
+      // default to current month
+      const now = new Date();
+      const defaultVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      input.value = defaultVal;
+
+      input.max = defaultVal;
+
+      const modal = document.getElementById('monthSelectModal');
+      if (modal) modal.classList.add('is-open');
+    }
+
+    function closeClaimMonthModal() {
+      const modal = document.getElementById('monthSelectModal');
+      if (modal) modal.classList.remove('is-open');
+    }
+
+    function proceedToClaimForm() {
+      const input = document.getElementById('claimMonthInput');
+      const val = input ? input.value : ''; // "YYYY-MM"
+      if (!val) {
+        alert('Please select a claim month.');
+        return;
+      }
+      window.location.href = '/claims/new?month=' + val;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const modal = document.getElementById('monthSelectModal');
+      if (modal) {
+        modal.addEventListener('click', function (e) {
+          if (e.target === this) closeClaimMonthModal();
+        });
+      }
+    });
   </script>
 </nav>
 </html>

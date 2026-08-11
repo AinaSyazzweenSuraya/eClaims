@@ -3,6 +3,7 @@ package com.eclaims.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -157,4 +158,38 @@ public class EmailService {
     }
 
     private String nvl(String s) { return s != null ? s : "No reason provided"; }
+
+    public void sendPasswordResetEmail(
+            String recipientEmail,
+            String resetLink) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setTo(recipientEmail);
+
+        message.setSubject(
+                "IFC E-Claims - Password Reset"
+        );
+
+        message.setText(
+                "Dear User,\n\n" +
+
+                        "We received a request to reset your " +
+                        "IFC E-Claims password.\n\n" +
+
+                        "Please click the link below to reset your password:\n\n" +
+
+                        resetLink + "\n\n" +
+
+                        "This password reset link will expire in 30 minutes.\n\n" +
+
+                        "If you did not request a password reset, " +
+                        "please ignore this email.\n\n" +
+
+                        "Regards,\n" +
+                        "IFC E-Claims"
+        );
+
+        mailSender.send(message);
+    }
 }

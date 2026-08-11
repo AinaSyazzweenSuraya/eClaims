@@ -105,7 +105,7 @@ public class PdfService {
         dbRowsBySection.put("OTHERS",  new ArrayList<>());
         for (ClaimFormRow r : allRows) {
             switch (r.getClaimId()) {
-                case "CL05","CL06","CL07" -> dbRowsBySection.get("MEDICAL").add(r);
+                case "CL05","CL06","CL07", "CL13" -> dbRowsBySection.get("MEDICAL").add(r);
                 case "CL01","CL02"         -> dbRowsBySection.get("MEAL").add(r);
                 case "CL12"                -> dbRowsBySection.get("TRAVEL").add(r);
                 default                    -> dbRowsBySection.get("OTHERS").add(r);
@@ -697,7 +697,7 @@ public class PdfService {
         map.put("TRAVEL",  new ArrayList<>()); map.put("OTHERS", new ArrayList<>());
         for (ClaimRowDto r : rows) {
             switch (r.getClaimId()) {
-                case "CL05", "CL06", "CL07" -> map.get("MEDICAL").add(r);
+                case "CL05", "CL06", "CL07", "CL13" -> map.get("MEDICAL").add(r);
                 case "CL01", "CL02"          -> map.get("MEAL").add(r);
                 case "CL12"                  -> map.get("TRAVEL").add(r);
                 default                      -> map.get("OTHERS").add(r);

@@ -52,6 +52,10 @@ public class ClaimFormRow {
     @Column(name = "MedicalClinic", length = 50)
     private String medicalClinic;
 
+    // Receipt No
+    @Column(name = "ReceiptNo", length = 50)
+    private String receiptNo;
+
     // Mileage fields
     @Column(name = "MileageVehicleType", length = 50)
     private String mileageVehicleType;

@@ -12,6 +12,7 @@ public class ClaimRowDto {
     private String claimId;
     private String claimTitle;
     private String description;
+    private String receiptNo;
     private String projectManagerId;
     private String timeFrom;
     private String timeTo;

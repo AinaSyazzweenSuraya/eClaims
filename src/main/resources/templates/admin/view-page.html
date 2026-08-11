@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('View & Download Pages')}">
+    <link rel="stylesheet" th:href="@{/css/view-page.css}">
+</head>
+<body class="layout-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<main class="main-content">
+
+    <div class="pdfsel-header">
+        <div>
+            <h1 class="pdfsel-title">Select Pages to Download</h1>
+            <p class="pdfsel-subtitle">Choose which pages of the attachment you want to download</p>
+        </div>
+        <a th:href="@{/admin/claims}" class="pdfsel-back-btn">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="pdfsel-panel">
+        <div class="pdfsel-toolbar">
+            <div class="pdfsel-toolbar-title">
+                <i class="bi bi-file-earmark-pdf"></i>
+                <span>Attachment Pages</span>
+                <span class="pdfsel-page-count" id="pageCountBadge"></span>
+            </div>
+            <div class="pdfsel-toolbar-actions">
+                <button type="button" class="pdfsel-btn pdfsel-btn-ghost" onclick="selectAll()">
+                    <i class="bi bi-check2-square"></i> Select All
+                </button>
+                <button type="button" class="pdfsel-btn pdfsel-btn-ghost" onclick="deselectAll()">
+                    <i class="bi bi-square"></i> Deselect All
+                </button>
+                <button type="button" class="pdfsel-btn pdfsel-btn-primary" id="downloadBtn" onclick="downloadSelected()" disabled>
+                    <i class="bi bi-download"></i> Download Selected (<span id="selectedCount">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <p class="pdfsel-hint"><i class="bi bi-info-circle"></i> Click a page to preview it full-size. Use the checkbox in the corner to select it for download.</p>
+
+        <div id="pdfPagesContainer" class="pdfsel-grid">
+            <div class="pdfsel-loading" id="loadingMsg">
+                <div class="pdfsel-spinner"></div>
+                <span>Loading pages...</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Zoom / preview modal -->
+<div id="pdfZoomOverlay" class="pdfsel-zoom-overlay" onclick="closeZoomOnBackdrop(event)">
+    <div class="pdfsel-zoom-modal">
+        <div class="pdfsel-zoom-header">
+            <span id="pdfZoomLabel">Page 1</span>
+            <button type="button" class="pdfsel-zoom-close" onclick="closeZoom()">&times;</button>
+        </div>
+        <div class="pdfsel-zoom-body" id="pdfZoomBody">
+            <button type="button" class="pdfsel-zoom-nav" onclick="zoomNav(-1)">&#8249;</button>
+            <div class="pdfsel-zoom-canvas-wrap" id="pdfZoomCanvasWrap">
+                <canvas id="pdfZoomCanvas"></canvas>
+            </div>
+            <button type="button" class="pdfsel-zoom-nav" onclick="zoomNav(1)">&#8250;</button>
+        </div>
+        <div class="pdfsel-zoom-controls">
+            <button type="button" class="pdfsel-zoom-zoombtn" onclick="adjustZoomLevel(-0.25)">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+            <span id="zoomLevelLabel">100%</span>
+            <button type="button" class="pdfsel-zoom-zoombtn" onclick="adjustZoomLevel(0.25)">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        </div>
+        <div class="pdfsel-zoom-footer">
+            <label class="pdfsel-zoom-select-label">
+                <input type="checkbox" id="pdfZoomCheckbox" onchange="toggleFromZoom(this)">
+                Select this page for download
+            </label>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script th:inline="javascript">
+    const workflowId = /*[[${workflowId}]]*/ 0;
+    const pdfUrl = /*[[@{/claims/pdf/{id}(id=${workflowId})}]]*/ '';
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const selectedPages = new Set();
+    let pdfDoc = null;
+    let currentZoomPage = 1;
+    let zoomLevel = 1.0; // 1.0 = base "fit" render, adjustable via +/- buttons
+
+    function updateDownloadButton() {
+        document.getElementById('selectedCount').textContent = selectedPages.size;
+        document.getElementById('downloadBtn').disabled = selectedPages.size === 0;
+    }
+
+    function setCardSelected(pageNum, isSelected) {
+        const card = document.querySelector(`.pdfsel-card[data-page="${pageNum}"]`);
+        if (card) card.classList.toggle('selected', isSelected);
+    }
+
+    function togglePage(pageNum, checkboxEl) {
+        checkboxEl.checked ? selectedPages.add(pageNum) : selectedPages.delete(pageNum);
+        setCardSelected(pageNum, checkboxEl.checked);
+        updateDownloadButton();
+    }
+
+    function selectAll() {
+        document.querySelectorAll('.page-checkbox').forEach(cb => {
+            cb.checked = true;
+            selectedPages.add(parseInt(cb.dataset.page));
+            setCardSelected(parseInt(cb.dataset.page), true);
+        });
+        updateDownloadButton();
+    }
+
+    function deselectAll() {
+        document.querySelectorAll('.page-checkbox').forEach(cb => {
+            cb.checked = false;
+            setCardSelected(parseInt(cb.dataset.page), false);
+        });
+        selectedPages.clear();
+        updateDownloadButton();
+    }
+
+    function downloadSelected() {
+        if (selectedPages.size === 0) return;
+        const pages = Array.from(selectedPages).sort((a, b) => a - b).join(',');
+        window.location.href = `/claims/pdf/${workflowId}/pages?pages=${pages}`;
+    }
+
+    async function renderPdfThumbnails() {
+        const container = document.getElementById('pdfPagesContainer');
+        try {
+            pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+            document.getElementById('loadingMsg').remove();
+            document.getElementById('pageCountBadge').textContent = `${pdfDoc.numPages} pages`;
+
+            for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                const page = await pdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 1.0 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+                const card = document.createElement('div');
+                card.className = 'pdfsel-card';
+                card.dataset.page = pageNum;
+                card.innerHTML = `
+                    <div class="pdfsel-thumb-wrap">
+                        <div class="pdfsel-checkbox-wrap">
+                            <input type="checkbox" class="page-checkbox" data-page="${pageNum}"
+                                   onchange="togglePage(${pageNum}, this)" onclick="event.stopPropagation()">
+                        </div>
+                        <span class="pdfsel-zoom-btn"><i class="bi bi-zoom-in"></i> Preview</span>
+                    </div>
+                    <div class="pdfsel-page-number">Page ${pageNum}</div>
+                `;
+
+                card.querySelector('.pdfsel-thumb-wrap').prepend(canvas);
+                card.querySelector('.pdfsel-thumb-wrap').addEventListener('click', () => openZoom(pageNum));
+
+                container.appendChild(card);
+            }
+        } catch (err) {
+            container.innerHTML = '<p style="color:#f87171;grid-column:1/-1;">Failed to load PDF preview.</p>';
+            console.error(err);
+        }
+    }
+
+    // ── High-DPI aware zoom render: canvas draws at full device pixel
+    // density (baseScale × zoomLevel × devicePixelRatio), while the
+    // CSS display size is set separately so the browser never has to
+    // upscale/blur the image. ──
+    async function renderZoomPage(pageNum) {
+        const page = await pdfDoc.getPage(pageNum);
+        const dpr = window.devicePixelRatio || 1;
+
+        const baseScale = 2.2;
+        const renderScale = baseScale * zoomLevel * dpr;
+
+        const viewport = page.getViewport({ scale: renderScale });
+        const canvas = document.getElementById('pdfZoomCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = (viewport.width / dpr) + 'px';
+        canvas.style.height = (viewport.height / dpr) + 'px';
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        document.getElementById('pdfZoomLabel').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
+        document.getElementById('pdfZoomCheckbox').checked = selectedPages.has(pageNum);
+        document.getElementById('zoomLevelLabel').textContent = Math.round(zoomLevel * 100) + '%';
+    }
+
+    function adjustZoomLevel(delta) {
+        zoomLevel = Math.min(3, Math.max(0.5, zoomLevel + delta));
+        renderZoomPage(currentZoomPage);
+    }
+
+    function openZoom(pageNum) {
+        currentZoomPage = pageNum;
+        zoomLevel = 1.0; // reset zoom each time a new page is opened
+        document.getElementById('pdfZoomOverlay').classList.add('active');
+        renderZoomPage(pageNum);
+    }
+
+    function closeZoom() {
+        document.getElementById('pdfZoomOverlay').classList.remove('active');
+    }
+
+    function closeZoomOnBackdrop(e) {
+        if (e.target.id === 'pdfZoomOverlay') closeZoom();
+    }
+
+    function zoomNav(delta) {
+        const next = currentZoomPage + delta;
+        if (next < 1 || next > pdfDoc.numPages) return;
+        currentZoomPage = next;
+        zoomLevel = 1.0; // reset zoom on page navigation too
+        renderZoomPage(currentZoomPage);
+    }
+
+    function toggleFromZoom(checkboxEl) {
+        const gridCheckbox = document.querySelector(`.page-checkbox[data-page="${currentZoomPage}"]`);
+        if (gridCheckbox) {
+            gridCheckbox.checked = checkboxEl.checked;
+            togglePage(currentZoomPage, gridCheckbox);
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (!document.getElementById('pdfZoomOverlay').classList.contains('active')) return;
+        if (e.key === 'Escape') closeZoom();
+        if (e.key === 'ArrowLeft') zoomNav(-1);
+        if (e.key === 'ArrowRight') zoomNav(1);
+    });
+
+    renderPdfThumbnails();
+</script>
+</body>
+</html>

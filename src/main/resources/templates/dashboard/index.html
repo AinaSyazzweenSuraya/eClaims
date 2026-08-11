@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
-<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<head>
+  <th:block th:replace="~{fragments/layout :: head('Dashboard')}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/popup-selected-month.css}">
+</head>
 <body class="layout-body">
 <div th:replace="~{fragments/layout :: sidebar}"></div>
 <main class="main-content">
@@ -14,16 +17,18 @@
         &nbsp;·&nbsp; <span th:text="${staff.designation}">Designation</span>
       </p>
     </div>
-    <a th:href="@{/claims/new}" class="btn-primary-action">
+    <button type="button"
+            class="btn-primary-action"
+            onclick="openClaimMonth()">
       <i class="bi bi-plus-lg"></i> New Claim
-    </a>
+    </button>
   </div>
 
   <!-- Flash messages -->
   <div th:if="${successMsg}" class="alert-banner success" th:text="${successMsg}"></div>
   <div th:if="${errorMsg}"   class="alert-banner danger"  th:text="${errorMsg}"></div>
 
-  <!-- Draft warning modal trigger — shown when staff clicks New Claim with existing draft -->
+  <!--  Draft warning modal trigger — shown when staff clicks New Claim with existing draft-->
   <div th:if="${draftWarning}"
        th:data-workflow-id="${draftWorkflowId}"
        th:data-form-id="${draftFormId}"
@@ -83,52 +88,58 @@
       <div class="table-wrapper">
         <table class="data-table" id="claimsTable">
           <thead>
-            <tr>
-              <th>Form No.</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th class="text-end">Total (RM)</th>
-              <th>Actions</th>
-            </tr>
+          <tr>
+            <th>Form No.</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th class="text-end">Total (RM)</th>
+            <th>Actions</th>
+          </tr>
           </thead>
           <tbody>
-            <tr th:if="${#lists.isEmpty(claims)}">
-              <td colspan="5" class="empty-state">
-                <i class="bi bi-inbox"></i>
-                <p>No claims yet. <a th:href="@{/claims/new}">Create your first claim</a></p>
-              </td>
-            </tr>
-            <tr th:each="claim : ${claims}">
-              <td><span class="claim-ref" th:text="'Form #' + ${claim.formId}">—</span></td>
-              <td th:text="${claim.createdDate != null ? #temporals.format(claim.createdDate,'dd MMM yyyy') : '—'}">—</td>
-              <td>
+          <tr th:if="${#lists.isEmpty(claims)}">
+            <td colspan="5" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p>
+                No claims yet.
+                <a href="javascript:void(0)"
+                   onclick="openClaimMonth()">
+                  Create your first claim
+                </a>
+              </p>
+            </td>
+          </tr>
+          <tr th:each="claim : ${claims}">
+            <td><span class="claim-ref" th:text="'Form #' + ${claim.formId}">—</span></td>
+            <td th:text="${claim.createdDate != null ? #temporals.format(claim.createdDate,'dd MMM yyyy') : '—'}">—</td>
+            <td>
                 <span class="status-badge"
                       th:classappend="'status-' + ${claim.wfStatus.toLowerCase()}"
                       th:text="${claim.wfStatus.replace('_',' ')}">DRAFT</span>
-              </td>
-              <td class="text-end fw-600"
-                  th:text="${#numbers.formatDecimal(claim.totalClaim != null ? claim.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
-              <td>
-                <div class="action-btns">
-                  <a th:if="${claim.wfStatus == 'DRAFT' or claim.wfStatus == 'PM_REJECTED' or claim.wfStatus == 'SUPERIOR_REJECTED'}"
-                     th:href="@{/claims/{id}/edit(id=${claim.workflowId})}"
-                     class="btn-action" title="Edit / Resubmit"><i class="bi bi-pencil"></i></a>
-                  <a th:href="@{/claims/{id}(id=${claim.workflowId})}"
-                     class="btn-action" title="View"><i class="bi bi-eye"></i></a>
-                  <a th:href="@{/claims/pdf/{id}(id=${claim.workflowId})}"
-                     class="btn-action" title="Download PDF"><i class="bi bi-file-pdf"></i></a>
-                  <button th:if="${claim.wfStatus == 'DRAFT'}"
-                          type="button" class="btn-action"
-                          style="border-color:#fecaca;color:#dc2626"
-                          title="Delete Draft"
-                          th:data-wf-id="${claim.workflowId}"
-                          th:data-form-id="${claim.formId}"
-                          onclick="confirmDelete(this.dataset.wfId, this.dataset.formId)">
-                    <i class="bi bi-trash3"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
+            </td>
+            <td class="text-end fw-600"
+                th:text="${#numbers.formatDecimal(claim.totalClaim != null ? claim.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
+            <td>
+              <div class="action-btns">
+                <a th:if="${claim.wfStatus == 'DRAFT' or claim.wfStatus == 'PM_REJECTED' or claim.wfStatus == 'SUPERIOR_REJECTED'}"
+                   th:href="@{/claims/{id}/edit(id=${claim.workflowId})}"
+                   class="btn-action" title="Edit / Resubmit"><i class="bi bi-pencil"></i></a>
+                <a th:href="@{/claims/{id}(id=${claim.workflowId})}"
+                   class="btn-action" title="View"><i class="bi bi-eye"></i></a>
+                <a th:href="@{/claims/pdf/{id}(id=${claim.workflowId})}"
+                   class="btn-action" title="Download PDF"><i class="bi bi-file-pdf"></i></a>
+                <button th:if="${claim.wfStatus == 'DRAFT'}"
+                        type="button" class="btn-action"
+                        style="border-color:#fecaca;color:#dc2626"
+                        title="Delete Draft"
+                        th:data-wf-id="${claim.workflowId}"
+                        th:data-form-id="${claim.formId}"
+                        onclick="confirmDelete(this.dataset.wfId, this.dataset.formId)">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
@@ -142,23 +153,23 @@
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
-            <tr>
-              <th>Type</th>
-              <th class="text-end">Enti/Yr</th>
-              <th class="text-end">Claimed</th>
-              <th class="text-end">Balance</th>
-            </tr>
+          <tr>
+            <th>Type</th>
+            <th class="text-end">Enti/Yr</th>
+            <th class="text-end">Claimed</th>
+            <th class="text-end">Balance</th>
+          </tr>
           </thead>
           <tbody>
-            <tr th:each="b : ${balances}"
-                th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? 'row-over-limit' : ''">
-              <td style="font-size:.78rem" th:text="${b.claimTitle}">—</td>
-              <td class="text-end mono" th:text="${#numbers.formatDecimal(b.entitled,1,'COMMA',2,'POINT')}">0.00</td>
-              <td class="text-end mono" th:text="${#numbers.formatDecimal(b.claimed,1,'COMMA',2,'POINT')}">0.00</td>
-              <td class="text-end mono fw-600"
-                  th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? 'text-danger' : 'text-success'"
-                  th:text="${#numbers.formatDecimal(b.balance,1,'COMMA',2,'POINT')}">0.00</td>
-            </tr>
+          <tr th:each="b : ${balances}"
+              th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? 'row-over-limit' : ''">
+            <td style="font-size:.78rem" th:text="${b.claimTitle}">—</td>
+            <td class="text-end mono" th:text="${#numbers.formatDecimal(b.entitled,1,'COMMA',2,'POINT')}">0.00</td>
+            <td class="text-end mono" th:text="${#numbers.formatDecimal(b.claimed,1,'COMMA',2,'POINT')}">0.00</td>
+            <td class="text-end mono fw-600"
+                th:classappend="${b.balance != null and b.balance.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? 'text-danger' : 'text-success'"
+                th:text="${#numbers.formatDecimal(b.balance,1,'COMMA',2,'POINT')}">0.00</td>
+          </tr>
           </tbody>
         </table>
       </div>
@@ -176,6 +187,75 @@
     });
   }
 </script>
+
+<!--Claim Month Selection Modal-->
+<div id="monthSelectModal" class="month-modal-overlay">
+  <div class="month-modal-box">
+
+    <div class="month-modal-header">
+      <div class="month-modal-icon">
+        <i class="bi bi-calendar-event"></i>
+      </div>
+      <div>
+        <div class="month-modal-title">Select Claim Month</div>
+        <div class="month-modal-subtitle">Your claim form will be based on this month</div>
+      </div>
+    </div>
+
+    <div class="month-modal-body">
+      <label for="claimMonthInput" class="month-modal-label">Claim Month</label>
+      <input type="month" id="claimMonthInput" class="month-modal-input" />
+      <p class="month-modal-hint">
+        <i class="bi bi-info-circle"></i>
+        You can only have one draft claim per month.
+      </p>
+    </div>
+
+    <div class="month-modal-actions">
+      <button type="button" class="month-modal-btn-cancel" onclick="closeClaimMonthModal()">
+        Cancel
+      </button>
+      <button type="button" class="month-modal-btn-confirm" onclick="proceedToClaimForm()">
+        <i class="bi bi-arrow-right-circle"></i> Continue
+      </button>
+    </div>
+
+  </div>
+</div>
+<script>
+  function openClaimMonth() {
+    const input = document.getElementById('claimMonthInput');
+
+    // default to current month
+    const now = new Date();
+    const defaultVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    input.value = defaultVal;
+
+    // prevent selecting future months — remove this line if not needed
+    input.max = defaultVal;
+
+    document.getElementById('monthSelectModal').classList.add('is-open');
+  }
+
+  function closeClaimMonthModal() {
+    document.getElementById('monthSelectModal').classList.remove('is-open');
+  }
+
+  function proceedToClaimForm() {
+    const val = document.getElementById('claimMonthInput').value; // "YYYY-MM"
+    if (!val) {
+      alert('Please select a claim month.');
+      return;
+    }
+    // adjust this route to match your actual "create claim" endpoint
+    window.location.href = '/claims/new?month=' + val;
+  }
+
+  document.getElementById('monthSelectModal').addEventListener('click', function(e) {
+    if (e.target === this) closeClaimMonthModal();
+  });
+</script>
+
 <!-- Delete Modal -->
 <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:14px;padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:1rem">
@@ -212,17 +292,17 @@
   </div>
 </div>
 <script>
-function confirmDelete(wfId, formId) {
+  function confirmDelete(wfId, formId) {
     document.getElementById('deleteFormRef').textContent = 'Form #' + formId;
     document.getElementById('deleteForm').action = '/claims/' + wfId + '/delete';
     document.getElementById('deleteModal').style.display = 'flex';
-}
-function closeDeleteModal() {
+  }
+  function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
-}
-document.getElementById('deleteModal').addEventListener('click', function(e) {
+  }
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
     if (e.target === this) closeDeleteModal();
-});
+  });
 </script>
 <!-- ── Existing Draft Warning Modal ─────────────────────── -->
 <div id="draftWarningModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
@@ -282,115 +362,115 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
 </div>
 
 <script>
-// ── Quick Stats Count-Up Animation ──────────────────────────────
-document.addEventListener('DOMContentLoaded', function () {
+  // ── Quick Stats Count-Up Animation ──────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
 
     // Animate integer stat values
     document.querySelectorAll('.stat-value[data-target]').forEach(function (el) {
-        var target = parseInt(el.dataset.target) || 0;
-        if (target === 0) return; // skip zeros — nothing to animate
-        animateCount(el, 0, target, 800);
+      var target = parseInt(el.dataset.target) || 0;
+      if (target === 0) return; // skip zeros — nothing to animate
+      animateCount(el, 0, target, 800);
     });
 
     // Animate RM amount separately (decimal formatting)
     document.querySelectorAll('.stat-amount[data-target]').forEach(function (el) {
-        var target = parseFloat(el.dataset.target) || 0;
-        if (target === 0) return;
-        animateAmount(el, 0, target, 1000);
+      var target = parseFloat(el.dataset.target) || 0;
+      if (target === 0) return;
+      animateAmount(el, 0, target, 1000);
     });
-});
+  });
 
-/**
- * Animate an integer from start to end over duration ms.
- * Uses easeOutQuart for a natural deceleration effect.
- */
-function animateCount(el, start, end, duration) {
+  /**
+   * Animate an integer from start to end over duration ms.
+   * Uses easeOutQuart for a natural deceleration effect.
+   */
+  function animateCount(el, start, end, duration) {
     var startTime = null;
 
     function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        var progress = Math.min((timestamp - startTime) / duration, 1);
-        // easeOutQuart — fast start, slow finish
-        var eased = 1 - Math.pow(1 - progress, 4);
-        el.textContent = Math.floor(eased * (end - start) + start);
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = end; // ensure exact final value
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      // easeOutQuart — fast start, slow finish
+      var eased = 1 - Math.pow(1 - progress, 4);
+      el.textContent = Math.floor(eased * (end - start) + start);
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = end; // ensure exact final value
     }
     requestAnimationFrame(step);
-}
+  }
 
-/**
- * Animate a decimal amount with comma formatting.
- * e.g. 0.00 → 1,234.50
- */
-function animateAmount(el, start, end, duration) {
+  /**
+   * Animate a decimal amount with comma formatting.
+   * e.g. 0.00 → 1,234.50
+   */
+  function animateAmount(el, start, end, duration) {
     var startTime = null;
 
     function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        var progress = Math.min((timestamp - startTime) / duration, 1);
-        var eased    = 1 - Math.pow(1 - progress, 4);
-        var current  = eased * (end - start) + start;
-        // Format with commas and 2 decimal places
-        el.textContent = current.toLocaleString('en-MY', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = end.toLocaleString('en-MY', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var eased    = 1 - Math.pow(1 - progress, 4);
+      var current  = eased * (end - start) + start;
+      // Format with commas and 2 decimal places
+      el.textContent = current.toLocaleString('en-MY', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = end.toLocaleString('en-MY', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
     }
     requestAnimationFrame(step);
-}
+  }
 </script>
 
 <script>
-// Auto-open draft warning modal if redirected from New Claim
-document.addEventListener('DOMContentLoaded', function() {
+  // Auto-open draft warning modal if redirected from New Claim
+  document.addEventListener('DOMContentLoaded', function() {
     const trigger = document.getElementById('draftWarningTrigger');
     if (trigger) {
-        const wfId   = trigger.dataset.workflowId;
-        const formId = trigger.dataset.formId;
-        openDraftModal(wfId, formId);
+      const wfId   = trigger.dataset.workflowId;
+      const formId = trigger.dataset.formId;
+      openDraftModal(wfId, formId);
     }
-});
+  });
 
-function openDraftModal(wfId, formId) {
+  function openDraftModal(wfId, formId) {
     document.getElementById('draftModalFormId').textContent   = formId;
     document.getElementById('draftModalEditBtn').href         = '/claims/' + wfId + '/edit';
     document.getElementById('draftModalDeleteBtn').href       = '#';
     document.getElementById('draftModalDeleteBtn').onclick    = function(e) {
-        e.preventDefault();
-        if (confirm('Are you sure you want to delete Form #' + formId + '? This cannot be undone.')) {
-            // Submit delete form
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = '/claims/' + wfId + '/delete';
-            const csrf = document.querySelector('meta[name="_csrf"]');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-            if (csrf) {
-                const input = document.createElement('input');
-                input.type  = 'hidden';
-                input.name  = '_csrf';
-                input.value = csrf.content;
-                form.appendChild(input);
-            }
-            document.body.appendChild(form);
-            form.submit();
+      e.preventDefault();
+      if (confirm('Are you sure you want to delete Form #' + formId + '? This cannot be undone.')) {
+        // Submit delete form
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '/claims/' + wfId + '/delete';
+        const csrf = document.querySelector('meta[name="_csrf"]');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+        if (csrf) {
+          const input = document.createElement('input');
+          input.type  = 'hidden';
+          input.name  = '_csrf';
+          input.value = csrf.content;
+          form.appendChild(input);
         }
+        document.body.appendChild(form);
+        form.submit();
+      }
     };
     document.getElementById('draftWarningModal').style.display = 'flex';
-}
+  }
 
-function closeDraftModal() {
+  function closeDraftModal() {
     document.getElementById('draftWarningModal').style.display = 'none';
-}
+  }
 
-document.getElementById('draftWarningModal').addEventListener('click', function(e) {
+  document.getElementById('draftWarningModal').addEventListener('click', function(e) {
     if (e.target === this) closeDraftModal();
-});
+  });
 </script>
 
 </body>

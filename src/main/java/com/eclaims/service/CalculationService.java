@@ -3,6 +3,7 @@ package com.eclaims.service;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalTime;
 
 /**
  * All claim calculation rules for IFC E-Claims.
@@ -33,14 +34,26 @@ public class CalculationService {
     // Calculate hours from TimeFrom/TimeTo strings (HH:mm)
     public BigDecimal calcHours(String timeFrom, String timeTo) {
         try {
-            if (timeFrom == null || timeTo == null) return BigDecimal.ZERO;
-            String[] from = timeFrom.split(":");
-            String[] to   = timeTo.split(":");
-            int fromMins  = Integer.parseInt(from[0]) * 60 + Integer.parseInt(from[1]);
-            int toMins    = Integer.parseInt(to[0])   * 60 + Integer.parseInt(to[1]);
-            if (toMins < fromMins) toMins += 24 * 60; // overnight
-            int diff = toMins - fromMins;
-            return new BigDecimal(diff).divide(new BigDecimal(60), 2, RoundingMode.HALF_UP);
+            if (timeFrom == null || timeTo == null ||
+            timeFrom.isBlank() || timeTo.isBlank()) return BigDecimal.ZERO;
+
+            LocalTime from = LocalTime.parse(timeFrom);
+            LocalTime to = LocalTime.parse(timeTo);
+
+            long fromMinutes = from.getHour() * 60L + from.getMinute();
+            long toMinutes = from.getMinute() * 60L + to.getMinute();
+
+//            String[] from = timeFrom.split(":");
+//            String[] to   = timeTo.split(":");
+//            int fromMins  = Integer.parseInt(from[0]) * 60 + Integer.parseInt(from[1]);
+//            int toMins    = Integer.parseInt(to[0])   * 60 + Integer.parseInt(to[1]);
+
+            if (toMinutes < fromMinutes) toMinutes += 24 * 60; // overnight
+            long diffMinutes = toMinutes - fromMinutes;
+
+//            return new BigDecimal(diff).divide(new BigDecimal(60), 2, RoundingMode.HALF_UP);
+            return BigDecimal.valueOf(diffMinutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }

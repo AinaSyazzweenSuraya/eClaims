@@ -124,6 +124,7 @@ public class ClaimService {
             row.setDate(dto.getDate());
             row.setClaimId(dto.getClaimId());
             row.setDescription(dto.getDescription());
+            row.setReceiptNo(dto.getReceiptNo());
             row.setProjectManagerId(dto.getProjectManagerId());
             row.setPmStatus(dto.getProjectManagerId() != null && row.getPmStatus() == null ? "Pending" : row.getPmStatus());
             row.setTimeFrom(dto.getTimeFrom());
@@ -341,6 +342,8 @@ public class ClaimService {
                                  info.setOthersBalance(safe(info.getOthersEntitled()).subtract(info.getOthersClaimed())); }
                 case "CL12" -> { info.setTravelClaimed(safe(info.getTravelClaimed()).add(total));
                                  info.setTravelBalance(safe(info.getTravelEntitled()).subtract(info.getTravelClaimed())); }
+                case "CL13" -> { info.setOpticalClaimed(safe(info.getOpticalClaimed()).add(total));
+                                 info.setOpticalBalance(safe(info.getOpticalEntitled()).subtract(info.getOpticalClaimed())); }
             }
         });
         staffClaimInfoRepository.save(info);
@@ -399,6 +402,7 @@ public class ClaimService {
                 case "CL10" -> { ent=safe(info.getTollEntitled());         claimed=safe(info.getTollClaimed());          bal=safe(info.getTollBalance()); }
                 case "CL11" -> { ent=safe(info.getOthersEntitled());       claimed=safe(info.getOthersClaimed());        bal=safe(info.getOthersBalance()); }
                 case "CL12" -> { ent=safe(info.getTravelEntitled());       claimed=safe(info.getTravelClaimed());        bal=safe(info.getTravelBalance()); }
+                case "CL13" -> { ent=safe(info.getOpticalEntitled()); claimed=safe(info.getOpticalClaimed()); bal=safe(info.getOpticalBalance()); }
             }
             return StaffClaimBalanceDto.builder()
                 .claimId(t.getClaimId()).claimTitle(t.getClaimTitle())
@@ -422,6 +426,7 @@ public class ClaimService {
         List<ClaimRowDto> rowDtos = rows.stream().map(r -> ClaimRowDto.builder()
             .rowId(r.getRowId()).date(r.getDate()).claimId(r.getClaimId())
             .description(r.getDescription()).projectManagerId(r.getProjectManagerId())
+            .receiptNo(r.getReceiptNo())
             .timeFrom(r.getTimeFrom()).timeTo(r.getTimeTo())
             .medicalClinic(r.getMedicalClinic())
             .mileageVehicleType(r.getMileageVehicleType()).mileageKm(r.getMileageKm())
