@@ -16,18 +16,20 @@
       <table class="data-table" id="claimsTable">
         <thead><tr><th>Form No.</th><th>Staff</th><th>Department</th><th>Date</th><th>Status</th><th class="text-end">Total (RM)</th><th>Actions</th></tr></thead>
         <tbody>
-          <tr th:each="c : ${claims}">
-            <td><span class="claim-ref" th:text="'Form #' + ${c.formId}">—</span></td>
-            <td th:text="${c.staffName}">—</td>
-            <td th:text="${c.department}">—</td>
-            <td th:text="${c.createdDate != null ? #temporals.format(c.createdDate,'dd MMM yyyy') : '—'}">—</td>
-            <td><span class="status-badge" th:classappend="'status-' + ${c.wfStatus.toLowerCase()}" th:text="${c.wfStatus.replace('_',' ')}">—</span></td>
-            <td class="text-end fw-600 mono" th:text="${#numbers.formatDecimal(c.totalClaim != null ? c.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
-            <td><div class="action-btns">
-              <a th:href="@{/claims/{id}(id=${c.workflowId})}" class="btn-action"><i class="bi bi-eye"></i></a>
-              <a th:href="@{/claims/pdf/{id}(id=${c.workflowId})}" class="btn-action"><i class="bi bi-file-pdf"></i></a>
-            </div></td>
-          </tr>
+        <tr th:each="c : ${claims}">
+          <td><span class="claim-ref" th:text="'Form #' + ${c.formId}">—</span></td>
+          <td th:text="${c.staffName}">—</td>
+          <td th:text="${c.department}">—</td>
+          <td th:text="${c.createdDate != null ? #temporals.format(c.createdDate,'dd MMM yyyy') : '—'}">—</td>
+          <td><span class="status-badge" th:classappend="'status-' + ${c.wfStatus.toLowerCase()}" th:text="${c.wfStatus.replace('_',' ')}">—</span></td>
+          <td class="text-end fw-600 mono" th:text="${#numbers.formatDecimal(c.totalClaim != null ? c.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
+          <td><div class="action-btns">
+            <a th:href="@{/claims/{id}(id=${c.workflowId})}" class="btn-action"><i class="bi bi-eye"></i></a>
+            <a th:href="@{/claims/admin/view-page/{id}(id=${c.workflowId})}" class="btn-action">
+              <i class="bi bi-file-pdf"></i>
+            </a>
+          </div></td>
+        </tr>
         </tbody>
       </table>
     </div>
