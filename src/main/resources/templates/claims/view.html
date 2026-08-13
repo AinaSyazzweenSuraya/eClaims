@@ -59,34 +59,44 @@
              style="display:none;position:absolute;right:0;top:calc(100% + 6px);
                     background:#fff;border:1px solid #e2e8f0;border-radius:12px;
                     box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:999;overflow:hidden">
-          <!-- Option 1: Summary Only -->
-          
-          <!-- Option 2: Full Report with attachments -->
-          <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}"
-             style="display:flex;align-items:center;gap:12px;padding:.9rem 1.1rem;
-                    color:#0f172a;text-decoration:none;transition:background .12s"
-             onmouseover="this.style.background='#f8fafc'"
-             onmouseout="this.style.background='transparent'">
-            <div style="width:34px;height:34px;border-radius:8px;background:#f0fdf4;
-                        display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <i class="bi bi-paperclip" style="color:#059669;font-size:1rem"></i>
-            </div>
-            <div>
-              <div style="font-weight:600;font-size:.85rem">Full Report</div>
-              <div style="font-size:.75rem;color:#64748b">Claim form + section-wise receipts</div>
-            </div>
-          </a>
-        </div>
-      </div>
-    </div>
+      <!-- Option 1: Summary Only -->
+<a th:href="@{/claims/pdf-summary/{id}(id=${form.workflowId})}"
+   style="display:flex;align-items:center;gap:12px;padding:.9rem 1.1rem;
+          color:#0f172a;text-decoration:none;transition:background .12s;border-bottom:1px solid #f1f5f9"
+   onmouseover="this.style.background='#f8fafc'"
+   onmouseout="this.style.background='transparent'">
+  <div style="width:34px;height:34px;border-radius:8px;background:#eff6ff;
+              display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <i class="bi bi-file-text" style="color:#2563eb;font-size:1rem"></i>
   </div>
+  <div>
+    <div style="font-weight:600;font-size:.85rem">Summary Only</div>
+    <div style="font-size:.75rem;color:#64748b">Claim form without attachments</div>
+  </div>
+</a>
+
+<!-- Option 2: Full Report with attachments -->
+<a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}"
+   style="display:flex;align-items:center;gap:12px;padding:.9rem 1.1rem;
+          color:#0f172a;text-decoration:none;transition:background .12s"
+   onmouseover="this.style.background='#f8fafc'"
+   onmouseout="this.style.background='transparent'">
+  <div style="width:34px;height:34px;border-radius:8px;background:#f0fdf4;
+              display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <i class="bi bi-paperclip" style="color:#059669;font-size:1rem"></i>
+  </div>
+  <div>
+    <div style="font-weight:600;font-size:.85rem">Full Report</div>
+    <div style="font-size:.75rem;color:#64748b">Claim form + section-wise receipts</div>
+  </div>
+</a>
 
   <!-- Rows by section -->
   <div class="card-panel">
     <div class="card-panel-header"><h2 class="card-panel-title"><i class="bi bi-receipt me-2"></i>Claim Details</h2></div>
     <div class="table-wrapper">
       <table class="data-table">
-        <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Details</th><th class="text-end">Amount (RM)</th><th class="text-end">Total (RM)</th><th>Receipt</th></tr></thead>
+        <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Units</th><th class="text-end">Amount (RM)</th><th class="text-end">Total (RM)</th><th>Receipt</th></tr></thead>
         <tbody>
           <tr th:if="${#lists.isEmpty(form.rows)}"><td colspan="7" class="empty-state"><p>No claim rows.</p></td></tr>
           <tr th:each="r : ${form.rows}">
@@ -108,13 +118,22 @@
             </td>
           </tr>
         </tbody>
-        <tfoot>
-          <tr style="background:#f8fafc">
-            <td colspan="5" class="text-end fw-600">Grand Total</td>
-            <td class="text-end fw-600 mono" th:text="${#numbers.formatDecimal(form.totalClaim != null ? form.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
-            <td></td>
-          </tr>
-        </tfoot>
+		<tfoot>
+			<tr style="
+		      background: #0f1523;
+		      color: #fff;
+		      font-size: 1.05rem;
+		      font-weight: 700;
+		  ">
+				<td colspan="5" class="text-end" style="padding:1rem 0.75rem;">
+					Grand Total
+				</td>
+				<td class="text-end mono" style="font-size:1.2rem;">
+					<span th:text="${#numbers.formatDecimal(form.totalClaim != null ? form.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</span>
+		    </td>
+		    <td></td>
+		  </tr>
+		</tfoot>
       </table>
     </div>
   </div>

@@ -342,8 +342,10 @@ public class ClaimService {
                                  info.setOthersBalance(safe(info.getOthersEntitled()).subtract(info.getOthersClaimed())); }
                 case "CL12" -> { info.setTravelClaimed(safe(info.getTravelClaimed()).add(total));
                                  info.setTravelBalance(safe(info.getTravelEntitled()).subtract(info.getTravelClaimed())); }
-                case "CL13" -> { info.setOpticalClaimed(safe(info.getOpticalClaimed()).add(total));
-                                 info.setOpticalBalance(safe(info.getOpticalEntitled()).subtract(info.getOpticalClaimed())); }
+                case "CL13" -> { info.setTravelClaimed(safe(info.getTravelClaimed()).add(total));
+                				 info.setTravelBalance(safe(info.getTravelEntitled()).subtract(info.getTravelClaimed())); }
+                case "CL14" -> { info.setTravelClaimed(safe(info.getTravelClaimed()).add(total));
+                				 info.setTravelBalance(safe(info.getTravelEntitled()).subtract(info.getTravelClaimed())); }
             }
         });
         staffClaimInfoRepository.save(info);
@@ -402,7 +404,8 @@ public class ClaimService {
                 case "CL10" -> { ent=safe(info.getTollEntitled());         claimed=safe(info.getTollClaimed());          bal=safe(info.getTollBalance()); }
                 case "CL11" -> { ent=safe(info.getOthersEntitled());       claimed=safe(info.getOthersClaimed());        bal=safe(info.getOthersBalance()); }
                 case "CL12" -> { ent=safe(info.getTravelEntitled());       claimed=safe(info.getTravelClaimed());        bal=safe(info.getTravelBalance()); }
-                case "CL13" -> { ent=safe(info.getOpticalEntitled()); claimed=safe(info.getOpticalClaimed()); bal=safe(info.getOpticalBalance()); }
+                case "CL13" -> { ent=safe(info.getTravelEntitled());       claimed=safe(info.getTravelClaimed());        bal=safe(info.getTravelBalance()); }
+                case "CL14" -> { ent=safe(info.getTravelEntitled());       claimed=safe(info.getTravelClaimed());        bal=safe(info.getTravelBalance()); }
             }
             return StaffClaimBalanceDto.builder()
                 .claimId(t.getClaimId()).claimTitle(t.getClaimTitle())

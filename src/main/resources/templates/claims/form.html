@@ -11,11 +11,12 @@
       <p class="page-sub" id="formIdDisplay"
          th:text="${form != null and form.formId != null} ? 'Form #' + ${form.formId} : 'New Claim'">New Claim</p>
     </div>
-    <div style="display:flex;gap:.75rem" th:if="${form != null and form.workflowId != null}">
+    <!-- hide download button -->
+    <!-- <div style="display:flex;gap:.75rem" th:if="${form != null and form.workflowId != null}">
       <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}" class="btn-pdf">
         <i class="bi bi-file-pdf"></i> Download PDF
       </a>
-    </div>
+    </div>  -->
   </div>
 
   <!-- Hidden fields -->
@@ -24,7 +25,9 @@
 
   <!-- ── Staff Info Banner ── -->
   <div class="form-section" style="margin-bottom:1.25rem">
-    <div style="background:#0f1523;padding:1rem 1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem">
+<div style="background:#0f1523;padding:1rem 1.5rem;display:grid;
+            grid-template-columns: 120px 1.5fr 1fr 1fr 1fr 140px;
+            gap:.75rem">
       <div>
         <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Staff ID</div>
         <div style="color:#fff;font-weight:700;font-family:var(--font-mono)" th:text="${staff.staffId}">—</div>
