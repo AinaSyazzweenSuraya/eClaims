@@ -11,12 +11,6 @@
       <p class="page-sub" id="formIdDisplay"
          th:text="${form != null and form.formId != null} ? 'Form #' + ${form.formId} : 'New Claim'">New Claim</p>
     </div>
-    <!-- hide download button -->
-    <!-- <div style="display:flex;gap:.75rem" th:if="${form != null and form.workflowId != null}">
-      <a th:href="@{/claims/pdf/{id}(id=${form.workflowId})}" class="btn-pdf">
-        <i class="bi bi-file-pdf"></i> Download PDF
-      </a>
-    </div>  -->
   </div>
 
   <!-- Hidden fields -->
@@ -24,42 +18,58 @@
          th:value="${form != null} ? ${form.workflowId} : ''"/>
 
   <!-- ── Staff Info Banner ── -->
-  <div class="form-section" style="margin-bottom:1.25rem">
-<div style="background:#0f1523;padding:1rem 1.5rem;display:grid;
-            grid-template-columns: 120px 1.5fr 1fr 1fr 1fr 140px;
-            gap:.75rem">
-      <div>
-        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Staff ID</div>
-        <div style="color:#fff;font-weight:700;font-family:var(--font-mono)" th:text="${staff.staffId}">—</div>
+  <div class="staff-banner-wrap">
+    <div class="staff-banner staff-banner-grid">
+      <div class="staff-banner-field">
+        <div class="staff-banner-icon"><i class="bi bi-person-vcard"></i></div>
+        <div>
+          <div class="staff-banner-label">Staff ID</div>
+          <div class="staff-banner-value mono" th:text="${staff.staffId}">—</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Name</div>
-        <div style="color:#fff;font-weight:600" th:text="${staff.name}">—</div>
+      <div class="staff-banner-field">
+        <div class="staff-banner-icon"><i class="bi bi-person"></i></div>
+        <div>
+          <div class="staff-banner-label">Name</div>
+          <div class="staff-banner-value" th:text="${staff.name}">—</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Department</div>
-        <div style="color:#e2e8f0" th:text="${staff.departmentName}">—</div>
+      <div class="staff-banner-field">
+        <div class="staff-banner-icon"><i class="bi bi-diagram-3"></i></div>
+        <div>
+          <div class="staff-banner-label">Department</div>
+          <div class="staff-banner-value" th:text="${staff.departmentName}">—</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Company</div>
-        <div style="color:#e2e8f0" th:text="${staff.companyName}">—</div>
+      <div class="staff-banner-field">
+        <div class="staff-banner-icon"><i class="bi bi-building"></i></div>
+        <div>
+          <div class="staff-banner-label">Company</div>
+          <div class="staff-banner-value" th:text="${staff.companyName}">—</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Designation</div>
-        <div style="color:#e2e8f0" th:text="${staff.designation}">—</div>
+      <div class="staff-banner-field">
+        <div class="staff-banner-icon"><i class="bi bi-briefcase"></i></div>
+        <div>
+          <div class="staff-banner-label">Designation</div>
+          <div class="staff-banner-value" th:text="${staff.designation}">—</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Date</div>
-        <div style="color:#e2e8f0" th:text="${#temporals.format(#temporals.createNow(),'dd/MM/yyyy')}">—</div>
+      <div class="staff-banner-field">
+        <div class="staff-banner-icon"><i class="bi bi-calendar3"></i></div>
+        <div>
+          <div class="staff-banner-label">Date</div>
+          <div class="staff-banner-value" th:text="${#temporals.format(#temporals.createNow(),'dd/MM/yyyy')}">—</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ── MEDICAL / DENTAL / OPTICAL ── -->
-  <div class="form-section" id="medicalSection">
+  <!-- ── MILEAGE ALLOWANCE ── -->
+  <div class="form-section" id="mileageSection">
     <div class="form-section-header">
-      <div class="section-title"><i class="bi bi-hospital me-2" style="color:#e11d48"></i>Medical / Dental / Optical Claim</div>
-      <button type="button" class="btn-add-row" onclick="addRow('medicalSection')">
+      <div class="section-title"><span class="section-icon-chip"><i class="bi bi-signpost-split"></i></span>Mileage Allowance</div>
+      <button type="button" class="btn-add-row" onclick="addRow('mileageSection')">
         <i class="bi bi-plus-lg"></i> Add Row
       </button>
     </div>
@@ -68,9 +78,9 @@
         <thead>
         <tr>
           <th style="width:110px">Date</th>
-          <th style="width:160px">Claim Type</th>
-          <th>Clinic name & Description</th>
-          <th>Receipt No</th>
+          <th>Description</th>
+          <th style="width:160px">Vehicle Type</th>
+          <th style="width:130px">Distance (KM)</th>
           <th style="width:110px">Amount (RM)</th>
           <th style="width:110px">Total (RM)</th>
           <th style="width:40px">Attach</th>
@@ -80,15 +90,15 @@
         <tbody></tbody>
       </table>
     </div>
-    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
-      Total: <strong class="mono" id="medicalSectionSub">0.00</strong>
+    <div class="section-subtotal">
+      Total: <strong class="mono" id="mileageSectionSub">0.00</strong>
     </div>
   </div>
 
   <!-- ── MEAL ALLOWANCE ── -->
   <div class="form-section" id="mealSection">
     <div class="form-section-header">
-      <div class="section-title"><i class="bi bi-cup-hot me-2" style="color:#d97706"></i>Meal Allowance</div>
+      <div class="section-title"><span class="section-icon-chip"><i class="bi bi-cup-hot"></i></span>Meal Allowance</div>
       <button type="button" class="btn-add-row" onclick="addRow('mealSection')">
         <i class="bi bi-plus-lg"></i> Add Row
       </button>
@@ -112,15 +122,45 @@
         <tbody></tbody>
       </table>
     </div>
-    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+    <div class="section-subtotal">
       Total: <strong class="mono" id="mealSectionSub">0.00</strong>
+    </div>
+  </div>
+
+  <!-- ── MEDICAL / DENTAL / OPTICAL ── -->
+  <div class="form-section" id="medicalSection">
+    <div class="form-section-header">
+      <div class="section-title"><span class="section-icon-chip"><i class="bi bi-hospital"></i></span>Medical / Dental / Optical Claim</div>
+      <button type="button" class="btn-add-row" onclick="addRow('medicalSection')">
+        <i class="bi bi-plus-lg"></i> Add Row
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="claim-row-table">
+        <thead>
+        <tr>
+          <th style="width:110px">Date</th>
+          <th style="width:160px">Claim Type</th>
+          <th>Clinic name &amp; Description</th>
+          <th>Receipt No</th>
+          <th style="width:110px">Amount (RM)</th>
+          <th style="width:110px">Total (RM)</th>
+          <th style="width:40px">Attach</th>
+          <th style="width:36px"></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="section-subtotal">
+      Total: <strong class="mono" id="medicalSectionSub">0.00</strong>
     </div>
   </div>
 
   <!-- ── TRAVEL ALLOWANCE ── -->
   <div class="form-section" id="travelSection">
     <div class="form-section-header">
-      <div class="section-title"><i class="bi bi-airplane me-2" style="color:#2563eb"></i>Travel Allowance</div>
+      <div class="section-title"><span class="section-icon-chip"><i class="bi bi-airplane"></i></span>Travel Allowance</div>
       <button type="button" class="btn-add-row" onclick="addRow('travelSection')">
         <i class="bi bi-plus-lg"></i> Add Row
       </button>
@@ -141,7 +181,7 @@
         <tbody></tbody>
       </table>
     </div>
-    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+    <div class="section-subtotal">
       Total: <strong class="mono" id="travelSectionSub">0.00</strong>
     </div>
   </div>
@@ -149,7 +189,7 @@
   <!-- ── OTHERS ── -->
   <div class="form-section" id="othersSection">
     <div class="form-section-header">
-      <div class="section-title"><i class="bi bi-three-dots me-2" style="color:#7c3aed"></i>Others</div>
+      <div class="section-title"><span class="section-icon-chip"><i class="bi bi-three-dots"></i></span>Others</div>
       <button type="button" class="btn-add-row" onclick="addRow('othersSection')">
         <i class="bi bi-plus-lg"></i> Add Row
       </button>
@@ -160,7 +200,7 @@
         <tr>
           <th style="width:110px">Date</th>
           <th style="width:180px">Claim Type</th>
-          <th>Description / Mileage Details</th>
+          <th>Description</th>
           <th style="width:120px">Amount (RM)</th>
           <th style="width:120px">Total (RM)</th>
           <th style="width:40px">Attach</th>
@@ -170,7 +210,7 @@
         <tbody></tbody>
       </table>
     </div>
-    <div style="padding:.75rem 1rem;text-align:right;font-size:.82rem;color:var(--text-muted)">
+    <div class="section-subtotal">
       Total: <strong class="mono" id="othersSectionSub">0.00</strong>
     </div>
   </div>
@@ -201,7 +241,7 @@
   <!-- ── CLAIM RECORDS (balances) ── -->
   <div class="form-section" th:if="${balances != null and !#lists.isEmpty(balances)}">
     <div class="form-section-header">
-      <div class="section-title"><i class="bi bi-bar-chart me-2"></i>Claim Records — Entitlement Summary</div>
+      <div class="section-title"><span class="section-icon-chip" style="--section-color:#475569;--section-color-wash:#f1f5f9"><i class="bi bi-bar-chart"></i></span>Claim Records — Entitlement Summary</div>
     </div>
     <div class="table-wrapper">
       <table class="data-table">
