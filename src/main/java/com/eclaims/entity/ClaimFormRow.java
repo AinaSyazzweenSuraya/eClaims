@@ -41,16 +41,21 @@ public class ClaimFormRow {
     @Column(name = "PMStatus", length = 50)
     private String pmStatus;
 
-    // Meal fields
+    // Meal fields (Time From)
     @Column(name = "TimeFrom", length = 50)
     private String timeFrom;
 
+    // Meal fields (Time To)
     @Column(name = "TimeTo", length = 50)
     private String timeTo;
 
     // Medical field
     @Column(name = "MedicalClinic", length = 50)
     private String medicalClinic;
+
+    // Party claim type
+    @Column(name = "PartyType", length = 20)
+    private String partyType;
 
     // Receipt No
     @Column(name = "ReceiptNo", length = 50)
@@ -83,7 +88,6 @@ public class ClaimFormRow {
     @Column(name = "CreatedDate")
     private LocalDateTime createdDate;
 
-    // ── Phase 6 additions ──
     @Column(name = "AttachmentPath", length = 500)
     private String attachmentPath;
 

@@ -17,6 +17,7 @@ public class ClaimRowDto {
     private String timeFrom;
     private String timeTo;
     private String medicalClinic;
+    private String partyType;
     private String mileageVehicleType;
     private Integer mileageKm;
     private String travelId;

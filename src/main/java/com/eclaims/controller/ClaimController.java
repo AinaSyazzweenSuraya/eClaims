@@ -497,6 +497,7 @@ public class ClaimController {
             dto.setTimeFrom(str(r, "timeFrom"));
             dto.setTimeTo(str(r, "timeTo"));
             dto.setMedicalClinic(str(r, "medicalClinic"));
+            dto.setPartyType(str(r, "partyType"));
             dto.setMileageVehicleType(str(r, "mileageVehicleType"));
             dto.setTravelId(str(r, "travelId"));
             dto.setMealId(str(r, "mealId"));

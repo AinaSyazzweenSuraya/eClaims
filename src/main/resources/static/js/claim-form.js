@@ -783,6 +783,7 @@ function collectRows() {
                 timeFrom: tr.querySelector('.row-time-from')?.value || null,
                 timeTo: tr.querySelector('.row-time-to')?.value || null,
                 medicalClinic: tr.querySelector('.row-panel-clinic')?.value || null,
+                partyType: tr.querySelector('.row-party-type')?.value || null,
                 mileageVehicleType: tr.querySelector('.row-vehicle')?.value || null,
                 mileageKm: id === 'mileageSection' ? (parseInt(tr.querySelector('.row-km')?.value) || null) : null,
                 travelId: tr.querySelector('.row-travel-id')?.value || null,
@@ -991,7 +992,7 @@ function loadExistingRows() {
         }
 
         if (sectionId === 'entertainmentSection') {
-            setVal(tr, '.row-party-type', row.medicalClinic || '');
+            setVal(tr, '.row-party-type', row.partyType || '');
             const amtEl = tr.querySelector('.row-amount');
             const totEl = tr.querySelector('.row-total');
             if (amtEl && totEl && amtEl.value) {

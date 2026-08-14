@@ -130,6 +130,7 @@ public class ClaimService {
             row.setTimeFrom(dto.getTimeFrom());
             row.setTimeTo(dto.getTimeTo());
             row.setMedicalClinic(dto.getMedicalClinic());
+            row.setPartyType(dto.getPartyType());
             row.setMileageVehicleType(dto.getMileageVehicleType());
             row.setMileageKm(dto.getMileageKm());
             row.setTravelId(dto.getTravelId());
@@ -432,6 +433,7 @@ public class ClaimService {
             .receiptNo(r.getReceiptNo())
             .timeFrom(r.getTimeFrom()).timeTo(r.getTimeTo())
             .medicalClinic(r.getMedicalClinic())
+            .partyType(r.getPartyType())
             .mileageVehicleType(r.getMileageVehicleType()).mileageKm(r.getMileageKm())
             .travelId(r.getTravelId()).mealId(r.getMealId())
             .amount(r.getAmount()).total(r.getTotal())
