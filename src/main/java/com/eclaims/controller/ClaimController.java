@@ -503,6 +503,7 @@ public class ClaimController {
             dto.setMealId(str(r, "mealId"));
             dto.setAttachmentPath(str(r, "attachmentPath"));
             dto.setAttachmentOriginalName(str(r, "attachmentOriginalName"));
+            dto.setReceiptNo(str(r, "receiptNo"));
             if (r.get("date") != null)
                 try { dto.setDate(LocalDate.parse(r.get("date").toString())); } catch (Exception ignored) {}
             if (r.get("amount") != null)
