@@ -81,7 +81,67 @@ function addRow(sectionId) {
         replicateMileageRow(previousRow, row);
     }
 
+    // Show the single attach button if atleast one row exist
+    if (sectionId === 'mileageSection') {
+        const attachBtn = document.getElementById('mileageAttachBtn');
+        if (attachBtn) attachBtn.style.display = 'inline-flex';
+    }
+
     updateTotals();
+}
+
+// ================================================================
+// MILEAGE SECTION — SINGLE SHARED ATTACHMENT
+// ================================================================
+
+let mileageAttachment = null;
+
+function triggerMileageAttach(){
+    document.getElementById('mileageSectionFileInput').click();
+}
+
+async function handleMileageAttach(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const btn = document.getElementById('mileageAttachBtn');
+    const label = document.getElementById('mileageAttachLabel');
+
+    if (currentWorkflowId) {
+        await uploadMileageAttach(file, btn, label);
+    } else {
+        mileageAttachment = { file, path: '', name: file.name };
+        if (btn) btn.classList.add('has-file');
+        if (label) label.textContent = file.name;
+        showToast(`${file.name} will upload on Save Draft`, 'success');
+    }
+    input.value = '';
+}
+
+async function uploadMileageAttach(file, btn, label) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const res = await fetch(`/claims/${currentWorkflowId}/mileage-attachment`, {
+            method: 'POST', headers: csrfHeader(), body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            mileageAttachment = { file: null, path: data.path || '', name: file.name };
+            if (btn) btn.classList.add('has-file');
+            if (label) label.textContent = file.name;
+            showToast(`Attached: ${file.name}`, 'success');
+            return true;
+        } else {
+            showToast(`Upload failed: ${data.message}`, 'error');
+            return false;
+        }
+    } catch (e) {
+        showToast('Upload failed: ' + e.message, 'error');
+        return false;
+    }
 }
 
 function replicateOthersRow(previousRow, newRow) {
@@ -212,7 +272,21 @@ function deleteRow(btn) {
     const tr = btn.closest('tr');
     const ok = confirm('This row will be removed. Do you want to continue?');
     if (!ok) return;
+
+    const section = tr.closest('.form-section');
+    const sectionId = section ? section.id : null;
+
     tr.remove();
+
+    if (sectionId === 'mileageSection') {
+        const tbody = document.querySelector('#mileageSection tbody');
+        const attachBtn = document.getElementById('mileageAttachBtn');
+        if (attachBtn && tbody && tbody.querySelectorAll('tr').length === 0) {
+            attachBtn.style.display = 'none';
+            attachBtn.classList.remove('has-file');
+            mileageAttachment = null;
+        }
+    }
     updateTotals();
 }
 
@@ -235,7 +309,6 @@ function buildRowHtml(sectionId, n) {
             <td><input type="number" class="row-input row-km" placeholder="Distance (KM)" min="0" oninput="calcMileageRow(this)"/></td>
             <td><input type="number" class="row-input row-amount" step="0.01" readonly style="background:#f8fafc"/></td>
             <td><input type="text" class="row-input row-total" readonly style="background:#f8fafc;font-weight:600"/></td>
-            <td>${buildAttachCell()}</td>
             <td><button type="button" class="btn-del-row" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
 
         case 'medicalSection':
@@ -740,8 +813,16 @@ async function saveDraft() {
                 showToast('Attachments uploaded successfully', 'success');
             }
 
+            if (mileageAttachment && mileageAttachment.file) {
+                await uploadMileageAttach(
+                    mileageAttachment.file,
+                    document.getElementById('mileageAttachBtn'),
+                    document.getElementById('mileageAttachLabel')
+                );
+            }
+
             showToast('Draft saved — Form #' + data.formId, 'success');
-            isDirty = false; // ← clear dirty flag after successful save
+            isDirty = false;
         } else {
             showToast(data.message || 'Save failed', 'error');
         }
@@ -947,6 +1028,14 @@ function loadExistingRows() {
             if (nameInput) nameInput.value = row.attachmentOriginalName || '';
         }
     });
+
+    if (typeof MILEAGE_ATTACHMENT !== 'undefined' && MILEAGE_ATTACHMENT && MILEAGE_ATTACHMENT.name) {
+        const btn = document.getElementById('mileageAttachBtn');
+        const label = document.getElementById('mileageAttachLabel');
+        if (btn) { btn.style.display = 'inline-flex'; btn.classList.add('has-file'); }
+        if (label) label.textContent = MILEAGE_ATTACHMENT.name;
+        mileageAttachment = { file: null, path: MILEAGE_ATTACHMENT.path || '', name: MILEAGE_ATTACHMENT.name };
+    }
 
     updateTotals();
 }

@@ -433,6 +433,31 @@ a { text-decoration: none; color: inherit; }
 .btn-attach.has-file { background: var(--success-light); color: var(--success); border-color: #a7f3d0; }
 .btn-attach:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
 
+.section-header-actions {
+  display: flex; align-items: center; gap: .6rem;
+}
+
+/* Attach button beside Add Row*/
+.btn-attach-section {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); color: var(--text-main);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: .45rem 1rem; font-size: .8rem; font-weight: 600;
+  cursor: pointer; transition: all .15s; font-family: var(--font-main);
+  max-width: 220px;
+}
+.btn-attach-section span {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.btn-attach-section:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+.btn-attach-section.has-file {
+  background: var(--success-light); color: var(--success); border-color: #a7f3d0;
+}
+
+body.dark-mode .btn-attach-section { background: var(--surface); border-color: var(--border); color: var(--text-main); }
+body.dark-mode .btn-attach-section:hover { background: var(--primary-light); color: var(--primary); }
+body.dark-mode .btn-attach-section.has-file { background: var(--success-light); color: var(--success); border-color: #14532d; }
+
 /* Section subtotal footer */
 .section-subtotal {
   padding: .9rem 1.6rem; text-align: right; font-size: .82rem; color: var(--text-muted);

@@ -69,9 +69,16 @@
   <div class="form-section" id="mileageSection">
     <div class="form-section-header">
       <div class="section-title"><span class="section-icon-chip"><i class="bi bi-signpost-split"></i></span>Mileage Allowance</div>
-      <button type="button" class="btn-add-row" onclick="addRow('mileageSection')">
-        <i class="bi bi-plus-lg"></i> Add Row
-      </button>
+      <div class="section-header-actions">
+        <button type="button" class="btn-attach-section" id="mileageAttachBtn" style="display:none" onclick="triggerMileageAttach()">
+          <i class="bi bi-paperclip"></i> <span id="mileageAttachLabel">Attach Receipt</span>
+        </button>
+        <input type="file" id="mileageSectionFileInput" style="display:none"
+               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onchange="handleMileageAttach(this)"/>
+        <button type="button" class="btn-add-row" onclick="addRow('mileageSection')">
+          <i class="bi bi-plus-lg"></i> Add Row
+        </button>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table class="claim-row-table">
@@ -83,7 +90,6 @@
           <th style="width:130px">Distance (KM)</th>
           <th style="width:110px">Amount (RM)</th>
           <th style="width:110px">Total (RM)</th>
-          <th style="width:40px">Attach</th>
           <th style="width:36px"></th>
         </tr>
         </thead>
