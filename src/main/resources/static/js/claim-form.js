@@ -311,6 +311,19 @@ function buildRowHtml(sectionId, n) {
             <td><input type="text" class="row-input row-total" readonly style="background:#f8fafc;font-weight:600"/></td>
             <td><button type="button" class="btn-del-row" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
 
+        case 'entertainmentSection':
+            return `
+            <td><input type="date" class="row-input row-date" onchange="updateTotals()"/></td>
+            <td>${buildEntertainmentPartyTypeOptions()}</td>
+            <td><input type="text" class="row-input row-desc others-desc" placeholder="Description"/></td>
+            <td>
+                <input type="number" class="row-input row-amount" step="0.01" min="0"
+                       placeholder="0.00" oninput="syncOthersTotal(this)"/>
+            </td>
+            <td><input type="text" class="row-input row-total" readonly style="background:#f8fafc;font-weight:600"/></td>
+            <td>${buildAttachCell()}</td>
+            <td><button type="button" class="btn-del-row" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
+
         case 'medicalSection':
             return `
             <td><input type="date" class="row-input row-date" onchange="updateTotals()"/></td>
@@ -372,7 +385,7 @@ function buildClaimTypeOptions(sectionId) {
     const groups = {
         medicalSection: ['CL05','CL06','CL07','CL13','CL14'],
         mealSection:    ['CL01','CL02'],
-        othersSection:  ['CL03','CL08','CL09','CL10','CL11']
+        othersSection:  ['CL03','CL08','CL10','CL11']
     };
     const allowed = groups[sectionId] || [];
     const opts = allowed.map(id => {
@@ -403,6 +416,12 @@ function buildTravelMealOptions() {
 function buildPmOptions() {
     const opts = PROJECT_MANAGERS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     return `<select class="row-input row-pm"><option value="">No PM</option>${opts}</select>`;
+}
+
+function buildEntertainmentPartyTypeOptions() {
+    const opts = ['Customer', 'Partner', 'Prospect']
+        .map(v => `<option value="${v}">${v}</option>`).join('');
+    return `<select class="row-input row-party-type"><option value="">Select type...</option>${opts}</select>`;
 }
 
 function buildAttachCell() {
@@ -467,12 +486,6 @@ function format2Decimals(input) {
     }
 }
 
-/*function syncMedicalTotal(input) {
-    const tr    = input.closest('tr');
-    const total = tr.querySelector('.row-total');
-    if (total) total.value = parseFloat(input.value || 0).toFixed(2);
-    updateTotals();
-}*/
 function syncMedicalTotal(input) {
     const tr = input.closest('tr');
     const total = tr.querySelector('.row-total');
@@ -650,7 +663,7 @@ function calcTravelRow(select) {
 }
 
 function updateTotals() {
-    const sections = ['mileageSection', 'mealSection', 'medicalSection', 'travelSection', 'othersSection'];
+    const sections = ['mileageSection', 'entertainmentSection', 'mealSection', 'medicalSection', 'travelSection', 'othersSection'];
     let grand = 0;
     sections.forEach(id => {
         const tbody = document.querySelector(`#${id} tbody`);
@@ -746,6 +759,7 @@ function collectRows() {
     const rows = [];
     const sections = [
         {id: 'mileageSection', type: 'mileage'},
+        {id: 'entertainmentSection', type: 'entertainment'},
         {id: 'medicalSection', type: 'medical'},
         {id: 'mealSection', type: 'meal'},
         {id: 'travelSection', type: 'travel'},
@@ -760,7 +774,8 @@ function collectRows() {
                 rowId: tr.dataset.rowId || null,
                 claimId: tr.querySelector('.row-claim-id')?.value
                     || (id === 'travelSection' ? 'CL12' : null)
-                    || (id === 'mileageSection' ? 'CL04' : null),
+                    || (id === 'mileageSection' ? 'CL04' : null)
+                    || (id === 'entertainmentSection' ? 'CL09' : null),
                 date: tr.querySelector('.row-date')?.value || null,
                 description: tr.querySelector('.row-desc')?.value || null,
                 receiptNo: tr.querySelector('.row-receipt')?.value || null,
@@ -843,7 +858,7 @@ async function refreshRowIds(workflowId) {
         if (!res.ok) return;
         const savedRows = await res.json();
 
-        const sections = ['mileageSection', 'medicalSection', 'mealSection', 'travelSection', 'othersSection'];
+        const sections = ['mileageSection', 'entertainmentSection', 'medicalSection', 'mealSection', 'travelSection', 'othersSection'];
         const claimIdToRowIds = {};
         savedRows.forEach(r => {
             if (!claimIdToRowIds[r.claimId]) claimIdToRowIds[r.claimId] = [];
@@ -856,7 +871,8 @@ async function refreshRowIds(workflowId) {
             domRows.forEach(tr => {
                 const claimId = tr.querySelector('.row-claim-id')?.value
                     || (sectionId === 'travelSection' ? 'CL12' : null)
-                    || (sectionId === 'mileageSection' ? 'CL04' : null);
+                    || (sectionId === 'mileageSection' ? 'CL04' : null)
+                    || (sectionId === 'entertainmentSection' ? 'CL09' : null);
                 if (!claimId) return;
                 if (!usageIdx[claimId]) usageIdx[claimId] = 0;
                 const rowIds = claimIdToRowIds[claimId] || [];
@@ -931,11 +947,12 @@ function loadExistingRows() {
         const id = row.claimId;
 
         let sectionId;
-        if (id === 'CL04')                          sectionId = 'mileageSection';
+        if (id === 'CL04') sectionId = 'mileageSection';
+        else if (id === 'CL09') sectionId = 'entertainmentSection';
         else if (['CL05','CL06','CL07','CL13','CL14'].includes(id)) sectionId = 'medicalSection';
-        else if (['CL01','CL02'].includes(id))      sectionId = 'mealSection';
-        else if (id === 'CL12')                     sectionId = 'travelSection';
-        else                                        sectionId = 'othersSection';
+        else if (['CL01','CL02'].includes(id)) sectionId = 'mealSection';
+        else if (id === 'CL12') sectionId = 'travelSection';
+        else sectionId = 'othersSection';
 
         addRow(sectionId);
 
@@ -969,6 +986,15 @@ function loadExistingRows() {
             const amtEl = tr.querySelector('.row-amount');
             const totEl = tr.querySelector('.row-total');
             if (amtEl && totEl && amtEl.value && !totEl.value) {
+                totEl.value = parseFloat(amtEl.value).toFixed(2);
+            }
+        }
+
+        if (sectionId === 'entertainmentSection') {
+            setVal(tr, '.row-party-type', row.medicalClinic || '');
+            const amtEl = tr.querySelector('.row-amount');
+            const totEl = tr.querySelector('.row-total');
+            if (amtEl && totEl && amtEl.value) {
                 totEl.value = parseFloat(amtEl.value).toFixed(2);
             }
         }

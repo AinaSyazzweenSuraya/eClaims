@@ -101,6 +101,35 @@
     </div>
   </div>
 
+  <!-- ── BUSINESS ENTERTAINMENT EXPENSES ── -->
+  <div class="form-section" id="entertainmentSection">
+    <div class="form-section-header">
+      <div class="section-title"><span class="section-icon-chip"><i class="bi bi-cup-straw"></i></span>Business Entertainment Expenses</div>
+      <button type="button" class="btn-add-row" onclick="addRow('entertainmentSection')">
+        <i class="bi bi-plus-lg"></i> Add Row
+      </button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="claim-row-table">
+        <thead>
+        <tr>
+          <th style="width:110px">Date</th>
+          <th style="width:160px">Claim Type</th>
+          <th>Description</th>
+          <th style="width:120px">Amount (RM)</th>
+          <th style="width:120px">Total (RM)</th>
+          <th style="width:40px">Attach</th>
+          <th style="width:36px"></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="section-subtotal">
+      Total: <strong class="mono" id="entertainmentSectionSub">0.00</strong>
+    </div>
+  </div>
+
   <!-- ── MEAL ALLOWANCE ── -->
   <div class="form-section" id="mealSection">
     <div class="form-section-header">

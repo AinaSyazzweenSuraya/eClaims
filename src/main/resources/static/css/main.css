@@ -37,6 +37,8 @@
   --sec-travel-bg: #eef2ff;
   --sec-others:   #6d28d9;
   --sec-others-bg: #f4f1fe;
+  --sec-entertainment:    #c026d3;
+  --sec-entertainment-bg: #fdf4ff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -366,12 +368,14 @@ a { text-decoration: none; color: inherit; }
 #medicalSection { --section-color: var(--sec-medical); }
 #travelSection  { --section-color: var(--sec-travel); }
 #othersSection  { --section-color: var(--sec-others); }
+#entertainmentSection { --section-color: var(--sec-entertainment); }
 
 #mileageSection .form-section-header { --section-color-wash: var(--sec-mileage-bg); }
 #mealSection    .form-section-header { --section-color-wash: var(--sec-meal-bg); }
 #medicalSection .form-section-header { --section-color-wash: var(--sec-medical-bg); }
 #travelSection  .form-section-header { --section-color-wash: var(--sec-travel-bg); }
 #othersSection  .form-section-header { --section-color-wash: var(--sec-others-bg); }
+#entertainmentSection .form-section-header { --section-color-wash: var(--sec-entertainment-bg); }
 
 .claim-row-table { width: 100%; border-collapse: collapse; table-layout: auto; }
 .claim-row-table th {
@@ -623,11 +627,12 @@ body.dark-mode {
   --text-muted:     #93a1b8;
   --text-faint:     #64748b;
 
-  --sec-mileage:  #2dd4bf;
-  --sec-meal:     #f59e0b;
-  --sec-medical:  #fb7185;
-  --sec-travel:   #60a5fa;
-  --sec-others:   #a78bfa;
+  --sec-mileage:       #2dd4bf;
+  --sec-entertainment: #e879f9;
+  --sec-meal:          #f59e0b;
+  --sec-medical:       #fb7185;
+  --sec-travel:        #60a5fa;
+  --sec-others:        #a78bfa;
 
   background: var(--canvas);
   color: var(--text-main);
