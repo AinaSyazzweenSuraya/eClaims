@@ -1,0 +1,707 @@
+/* ==========================================================================
+   view-page.css — Select Pages to Download
+   ========================================================================== */
+
+:root {
+    --pdfsel-primary: #4f46e5;
+    --pdfsel-primary-hover: #4338ca;
+    --pdfsel-primary-light: #eef2ff;
+    --pdfsel-border: #e5e7eb;
+    --pdfsel-border-strong: #d1d5db;
+    --pdfsel-bg: #f9fafb;
+    --pdfsel-surface: #ffffff;
+    --pdfsel-text: #111827;
+    --pdfsel-text-muted: #6b7280;
+    --pdfsel-text-faint: #9ca3af;
+    --pdfsel-danger: #f87171;
+    --pdfsel-radius: 10px;
+    --pdfsel-radius-sm: 6px;
+    --pdfsel-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --pdfsel-shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+    --pdfsel-shadow-lg: 0 20px 50px rgba(16, 24, 40, 0.25);
+    --pdfsel-transition: 150ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   Header
+   -------------------------------------------------------------------------- */
+
+.pdfsel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.pdfsel-title {
+    margin: 0 0 4px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--pdfsel-text);
+    letter-spacing: -0.01em;
+}
+
+.pdfsel-subtitle {
+    margin: 0;
+    font-size: 0.925rem;
+    color: var(--pdfsel-text-muted);
+}
+
+.pdfsel-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: var(--pdfsel-radius-sm);
+    border: 1px solid var(--pdfsel-border-strong);
+    background: var(--pdfsel-surface);
+    color: var(--pdfsel-text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background var(--pdfsel-transition), border-color var(--pdfsel-transition), box-shadow var(--pdfsel-transition);
+    white-space: nowrap;
+}
+
+.pdfsel-back-btn:hover {
+    background: var(--pdfsel-bg);
+    border-color: var(--pdfsel-text-faint);
+    box-shadow: var(--pdfsel-shadow-sm);
+}
+
+.pdfsel-back-btn i {
+    font-size: 0.875rem;
+}
+
+/* --------------------------------------------------------------------------
+   Panel / Toolbar
+   -------------------------------------------------------------------------- */
+
+.pdfsel-panel {
+    background: var(--pdfsel-surface);
+    border: 1px solid var(--pdfsel-border);
+    border-radius: var(--pdfsel-radius);
+    box-shadow: var(--pdfsel-shadow-sm);
+    padding: 20px;
+}
+
+.pdfsel-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--pdfsel-border);
+}
+
+.pdfsel-toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--pdfsel-text);
+}
+
+.pdfsel-toolbar-title i {
+    color: var(--pdfsel-primary);
+    font-size: 1.15rem;
+}
+
+.pdfsel-page-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--pdfsel-primary);
+    background: var(--pdfsel-primary-light);
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.01em;
+}
+
+.pdfsel-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pdfsel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: var(--pdfsel-radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background var(--pdfsel-transition), border-color var(--pdfsel-transition),
+    color var(--pdfsel-transition), box-shadow var(--pdfsel-transition), transform var(--pdfsel-transition);
+}
+
+.pdfsel-btn:active {
+    transform: translateY(1px);
+}
+
+.pdfsel-btn-ghost {
+    background: var(--pdfsel-surface);
+    border-color: var(--pdfsel-border-strong);
+    color: var(--pdfsel-text);
+}
+
+.pdfsel-btn-ghost:hover {
+    background: var(--pdfsel-bg);
+    border-color: var(--pdfsel-text-faint);
+}
+
+.pdfsel-btn-primary {
+    background: var(--pdfsel-primary);
+    color: #ffffff;
+    box-shadow: var(--pdfsel-shadow-sm);
+}
+
+.pdfsel-btn-primary:hover:not(:disabled) {
+    background: var(--pdfsel-primary-hover);
+    box-shadow: var(--pdfsel-shadow-md);
+}
+
+.pdfsel-btn-primary:disabled {
+    background: #c7d2fe;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.pdfsel-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px 0;
+    font-size: 0.825rem;
+    color: var(--pdfsel-text-muted);
+}
+
+.pdfsel-hint i {
+    color: var(--pdfsel-text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   Loading state
+   -------------------------------------------------------------------------- */
+
+.pdfsel-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 60px 0;
+    color: var(--pdfsel-text-muted);
+    font-size: 0.9rem;
+}
+
+.pdfsel-spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid var(--pdfsel-border);
+    border-top-color: var(--pdfsel-primary);
+    border-radius: 50%;
+    animation: pdfsel-spin 0.8s linear infinite;
+}
+
+@keyframes pdfsel-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------------------------------------
+   Page grid & cards
+   -------------------------------------------------------------------------- */
+
+.pdfsel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 18px;
+}
+
+.pdfsel-card {
+    border: 1px solid var(--pdfsel-border);
+    border-radius: var(--pdfsel-radius-sm);
+    background: var(--pdfsel-bg);
+    overflow: hidden;
+    transition: border-color var(--pdfsel-transition), box-shadow var(--pdfsel-transition), transform var(--pdfsel-transition);
+}
+
+.pdfsel-card:hover {
+    border-color: var(--pdfsel-text-faint);
+    box-shadow: var(--pdfsel-shadow-md);
+    transform: translateY(-2px);
+}
+
+.pdfsel-card.selected {
+    border-color: var(--pdfsel-primary);
+}
+
+.pdfsel-thumb-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-bottom: 1px solid var(--pdfsel-border);
+    cursor: pointer;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+}
+
+.pdfsel-thumb-wrap canvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    box-shadow: 0 1px 4px rgba(16, 24, 40, 0.12);
+}
+
+.pdfsel-checkbox-wrap {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 3px;
+    padding: 1px;
+    display: flex;
+}
+
+.page-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.page-checkbox:focus-visible {
+    outline: 2px solid var(--pdfsel-primary);
+    outline-offset: 1px;
+    border-radius: 4px;
+}
+
+.pdfsel-zoom-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(17, 24, 39, 0.75);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 9px;
+    border-radius: 999px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity var(--pdfsel-transition), transform var(--pdfsel-transition);
+    pointer-events: none;
+}
+
+.pdfsel-thumb-wrap:hover .pdfsel-zoom-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.pdfsel-page-number {
+    text-align: center;
+    padding: 9px 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--pdfsel-text-muted);
+    background: var(--pdfsel-surface);
+}
+
+.pdfsel-card.selected .pdfsel-page-number {
+    color: var(--pdfsel-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Zoom / preview modal
+   -------------------------------------------------------------------------- */
+
+.pdfsel-zoom-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.65);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--pdfsel-transition);
+    padding: 16px;
+}
+
+.pdfsel-zoom-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.pdfsel-zoom-modal {
+    background: var(--pdfsel-surface);
+    border-radius: var(--pdfsel-radius);
+    box-shadow: var(--pdfsel-shadow-lg);
+    width: 100%;
+    max-width: 1100px;
+    height: 92vh;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.pdfsel-zoom-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--pdfsel-border);
+    font-weight: 600;
+    color: var(--pdfsel-text);
+    font-size: 0.9rem;
+}
+
+.pdfsel-zoom-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--pdfsel-text-muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background var(--pdfsel-transition), color var(--pdfsel-transition);
+}
+
+.pdfsel-zoom-close:hover {
+    background: var(--pdfsel-bg);
+    color: var(--pdfsel-text);
+}
+
+.pdfsel-zoom-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: var(--pdfsel-bg);
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+.pdfsel-zoom-canvas-wrap {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    min-height: 0;
+}
+
+.pdfsel-zoom-canvas-wrap canvas {
+    box-shadow: 0 2px 10px rgba(16, 24, 40, 0.18);
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: block;
+}
+
+.pdfsel-zoom-nav {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--pdfsel-border-strong);
+    background: var(--pdfsel-surface);
+    color: var(--pdfsel-text);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--pdfsel-transition), border-color var(--pdfsel-transition);
+}
+
+.pdfsel-zoom-nav:hover {
+    background: var(--pdfsel-primary-light);
+    border-color: var(--pdfsel-primary);
+    color: var(--pdfsel-primary);
+}
+
+.pdfsel-zoom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--pdfsel-border);
+    font-size: 0.825rem;
+    color: var(--pdfsel-text-muted);
+    font-weight: 600;
+}
+
+.pdfsel-zoom-zoombtn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--pdfsel-border-strong);
+    background: var(--pdfsel-surface);
+    color: var(--pdfsel-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: background var(--pdfsel-transition), border-color var(--pdfsel-transition);
+}
+
+.pdfsel-zoom-zoombtn:hover {
+    background: var(--pdfsel-bg);
+    border-color: var(--pdfsel-text-faint);
+}
+
+#zoomLevelLabel {
+    min-width: 42px;
+    text-align: center;
+}
+
+.pdfsel-zoom-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--pdfsel-border);
+}
+
+.pdfsel-zoom-select-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--pdfsel-text);
+    cursor: pointer;
+}
+
+.pdfsel-zoom-select-label input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    accent-color: var(--pdfsel-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+    .pdfsel-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pdfsel-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pdfsel-toolbar-actions {
+        justify-content: flex-start;
+    }
+
+    .pdfsel-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+    }
+
+    .pdfsel-zoom-body {
+        flex-direction: column;
+    }
+
+    .pdfsel-zoom-nav {
+        display: none;
+    }
+}
+
+/* ==========================================================================
+   DARK MODE — every text/surface pair given an explicit value,
+   following the same body.dark-mode pattern as main.css
+   ========================================================================== */
+
+body.dark-mode {
+    --pdfsel-primary: #60a5fa;
+    --pdfsel-primary-hover: #93c5fd;
+    --pdfsel-primary-light: #16233d;
+    --pdfsel-border: #6a81a5;
+    --pdfsel-border-strong: #334155;
+    --pdfsel-bg: #0b1220;
+    --pdfsel-surface: #141c2b;
+    --pdfsel-text: #f1f5f9;
+    --pdfsel-text-muted: #93a1b8;
+    --pdfsel-text-faint: #64748b;
+    --pdfsel-danger: #f87171;
+    --pdfsel-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --pdfsel-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --pdfsel-shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* Header */
+body.dark-mode .pdfsel-title    { color: var(--pdfsel-text); }
+body.dark-mode .pdfsel-subtitle { color: var(--pdfsel-text-muted); }
+body.dark-mode .pdfsel-back-btn {
+    background: var(--pdfsel-surface);
+    border-color: var(--pdfsel-border-strong);
+    color: var(--pdfsel-text);
+}
+body.dark-mode .pdfsel-back-btn:hover {
+    background: #1c2942;
+    border-color: var(--pdfsel-text-faint);
+}
+
+/* Panel / toolbar */
+body.dark-mode .pdfsel-panel {
+    background: var(--pdfsel-surface);
+    border-color: var(--pdfsel-border);
+}
+body.dark-mode .pdfsel-toolbar       { border-bottom-color: var(--pdfsel-border); }
+body.dark-mode .pdfsel-toolbar-title { color: var(--pdfsel-text); }
+body.dark-mode .pdfsel-toolbar-title i { color: var(--pdfsel-primary); }
+body.dark-mode .pdfsel-page-count {
+    color: var(--pdfsel-primary);
+    background: var(--pdfsel-primary-light);
+}
+
+body.dark-mode .pdfsel-btn-ghost {
+    background: var(--pdfsel-surface);
+    border-color: var(--pdfsel-border-strong);
+    color: var(--pdfsel-text);
+}
+body.dark-mode .pdfsel-btn-ghost:hover {
+    background: #1c2942;
+    border-color: var(--pdfsel-text-faint);
+}
+body.dark-mode .pdfsel-btn-primary {
+    background: var(--pdfsel-primary);
+    color: #06101f;
+}
+body.dark-mode .pdfsel-btn-primary:hover:not(:disabled) {
+    background: var(--pdfsel-primary-hover);
+}
+body.dark-mode .pdfsel-btn-primary:disabled {
+    background: #1e293b;
+    color: var(--pdfsel-text-faint);
+}
+
+body.dark-mode .pdfsel-hint      { color: var(--pdfsel-text-muted); }
+body.dark-mode .pdfsel-hint i    { color: var(--pdfsel-text-faint); }
+
+/* Loading state */
+body.dark-mode .pdfsel-loading  { color: var(--pdfsel-text-muted); }
+body.dark-mode .pdfsel-spinner {
+    border-color: var(--pdfsel-border);
+    border-top-color: var(--pdfsel-primary);
+}
+
+/* Page grid & cards */
+body.dark-mode .pdfsel-card {
+    border-color: var(--pdfsel-border);
+    background: var(--pdfsel-bg);
+}
+body.dark-mode .pdfsel-card:hover {
+    border-color: var(--pdfsel-text-faint);
+}
+body.dark-mode .pdfsel-card.selected {
+    border-color: var(--pdfsel-primary);
+}
+
+body.dark-mode .pdfsel-thumb-wrap {
+    background: #ffffff;
+    border-bottom-color: var(--pdfsel-border);
+}
+
+body.dark-mode .pdfsel-checkbox-wrap {
+    background: rgba(20, 28, 43, 0.9);
+}
+
+body.dark-mode .pdfsel-zoom-btn {
+    background: rgba(6, 16, 31, 0.85);
+    color: #f1f5f9;
+}
+
+body.dark-mode .pdfsel-page-number {
+    color: var(--pdfsel-text-muted);
+    background: var(--pdfsel-surface);
+}
+body.dark-mode .pdfsel-card.selected .pdfsel-page-number {
+    color: var(--pdfsel-primary);
+}
+
+/* Zoom / preview modal */
+body.dark-mode .pdfsel-zoom-overlay {
+    background: rgba(0, 0, 0, 0.75);
+}
+body.dark-mode .pdfsel-zoom-modal {
+    background: var(--pdfsel-surface);
+    box-shadow: var(--pdfsel-shadow-lg);
+}
+body.dark-mode .pdfsel-zoom-header {
+    border-bottom-color: var(--pdfsel-border);
+    color: var(--pdfsel-text);
+}
+body.dark-mode .pdfsel-zoom-close {
+    color: var(--pdfsel-text-muted);
+}
+body.dark-mode .pdfsel-zoom-close:hover {
+    background: #1c2942;
+    color: var(--pdfsel-text);
+}
+body.dark-mode .pdfsel-zoom-body {
+    background: var(--pdfsel-bg);
+}
+
+body.dark-mode .pdfsel-zoom-canvas-wrap canvas {
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+}
+
+body.dark-mode .pdfsel-zoom-nav {
+    background: var(--pdfsel-surface);
+    border-color: var(--pdfsel-border-strong);
+    color: var(--pdfsel-text);
+}
+body.dark-mode .pdfsel-zoom-nav:hover {
+    background: var(--pdfsel-primary-light);
+    border-color: var(--pdfsel-primary);
+    color: var(--pdfsel-primary);
+}
+
+body.dark-mode .pdfsel-zoom-controls {
+    border-top-color: var(--pdfsel-border);
+    color: var(--pdfsel-text-muted);
+}
+body.dark-mode .pdfsel-zoom-zoombtn {
+    background: var(--pdfsel-surface);
+    border-color: var(--pdfsel-border-strong);
+    color: var(--pdfsel-text);
+}
+body.dark-mode .pdfsel-zoom-zoombtn:hover {
+    background: #1c2942;
+    border-color: var(--pdfsel-text-faint);
+}
+
+body.dark-mode .pdfsel-zoom-footer {
+    border-top-color: var(--pdfsel-border);
+}
+body.dark-mode .pdfsel-zoom-select-label {
+    color: var(--pdfsel-text);
+}

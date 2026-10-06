@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
-<head th:replace="~{fragments/layout :: head('View & Download Pages')}">
+<head>
+    <meta th:replace="~{fragments/layout :: head('View & Download Pages')}" />
     <link rel="stylesheet" th:href="@{/css/view-page.css}">
 </head>
 <body class="layout-body">
@@ -61,15 +62,6 @@
                 <canvas id="pdfZoomCanvas"></canvas>
             </div>
             <button type="button" class="pdfsel-zoom-nav" onclick="zoomNav(1)">&#8250;</button>
-        </div>
-        <div class="pdfsel-zoom-controls">
-            <button type="button" class="pdfsel-zoom-zoombtn" onclick="adjustZoomLevel(-0.25)">
-                <i class="bi bi-dash-lg"></i>
-            </button>
-            <span id="zoomLevelLabel">100%</span>
-            <button type="button" class="pdfsel-zoom-zoombtn" onclick="adjustZoomLevel(0.25)">
-                <i class="bi bi-plus-lg"></i>
-            </button>
         </div>
         <div class="pdfsel-zoom-footer">
             <label class="pdfsel-zoom-select-label">
@@ -140,50 +132,177 @@
             document.getElementById('loadingMsg').remove();
             document.getElementById('pageCountBadge').textContent = `${pdfDoc.numPages} pages`;
 
+            // Step 1: render every page and crop to its actual content
+            const croppedPages = [];
             for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
                 const page = await pdfDoc.getPage(pageNum);
                 const viewport = page.getViewport({ scale: 1.0 });
 
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                const fullCanvas = document.createElement('canvas');
+                fullCanvas.width = viewport.width;
+                fullCanvas.height = viewport.height;
+                const fullCtx = fullCanvas.getContext('2d');
+                await page.render({ canvasContext: fullCtx, viewport }).promise;
 
-                const card = document.createElement('div');
-                card.className = 'pdfsel-card';
-                card.dataset.page = pageNum;
-                card.innerHTML = `
-                    <div class="pdfsel-thumb-wrap">
-                        <div class="pdfsel-checkbox-wrap">
-                            <input type="checkbox" class="page-checkbox" data-page="${pageNum}"
-                                   onchange="togglePage(${pageNum}, this)" onclick="event.stopPropagation()">
-                        </div>
-                        <span class="pdfsel-zoom-btn"><i class="bi bi-zoom-in"></i> Preview</span>
-                    </div>
-                    <div class="pdfsel-page-number">Page ${pageNum}</div>
-                `;
+                const bbox = getContentBoundingBox(fullCanvas, fullCtx);
+                const margin = 12;
+                const cropX = Math.max(0, bbox.minX - margin);
+                const cropY = Math.max(0, bbox.minY - margin);
+                const cropW = Math.min(fullCanvas.width - cropX, bbox.maxX - bbox.minX + margin * 2);
+                const cropH = Math.min(fullCanvas.height - cropY, bbox.maxY - bbox.minY + margin * 2);
 
-                card.querySelector('.pdfsel-thumb-wrap').prepend(canvas);
-                card.querySelector('.pdfsel-thumb-wrap').addEventListener('click', () => openZoom(pageNum));
-
-                container.appendChild(card);
+                croppedPages.push({ pageNum, fullCanvas, cropX, cropY, cropW, cropH });
             }
+
+            // Step 2: build one tall canvas stacking all cropped strips
+            const gap = 20; // visual breathing room + divider between pages
+            const stitchWidth = Math.max(...croppedPages.map(p => p.cropW));
+            const stitchHeight = croppedPages.reduce((sum, p) => sum + p.cropH, 0) + gap * (croppedPages.length - 1);
+
+            const stitchCanvas = document.createElement('canvas');
+            stitchCanvas.width = stitchWidth;
+            stitchCanvas.height = stitchHeight;
+            const stitchCtx = stitchCanvas.getContext('2d');
+            stitchCtx.fillStyle = '#ffffff';
+            stitchCtx.fillRect(0, 0, stitchWidth, stitchHeight);
+
+            const pageBoundaries = [];
+            let yOffset = 0;
+            for (const p of croppedPages) {
+                stitchCtx.drawImage(
+                    p.fullCanvas,
+                    p.cropX, p.cropY, p.cropW, p.cropH,
+                    0, yOffset, p.cropW, p.cropH
+                );
+                pageBoundaries.push({ pageNum: p.pageNum, yStart: yOffset, yEnd: yOffset + p.cropH });
+
+                yOffset += p.cropH;
+                if (p !== croppedPages[croppedPages.length - 1]) {
+                    // draw a subtle divider line in the gap
+                    stitchCtx.strokeStyle = '#e2e8f0';
+                    stitchCtx.lineWidth = 1;
+                    stitchCtx.beginPath();
+                    stitchCtx.moveTo(0, yOffset + gap / 2);
+                    stitchCtx.lineTo(stitchWidth, yOffset + gap / 2);
+                    stitchCtx.stroke();
+                    yOffset += gap;
+                }
+            }
+
+            // Step 3: render the single stitched canvas + per-page checkboxes overlaid at boundaries
+            const wrap = document.createElement('div');
+            wrap.className = 'pdfsel-stitched-wrap';
+            wrap.style.position = 'relative';
+            wrap.appendChild(stitchCanvas);
+
+            // Overlay a checkbox + label at the top-left of each page's region
+            for (const b of pageBoundaries) {
+                const overlay = document.createElement('div');
+                overlay.className = 'pdfsel-stitch-page-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.top = `${b.yStart + 8}px`;
+                overlay.style.left = '8px';
+                overlay.innerHTML = `
+                <label class="pdfsel-stitch-label">
+                    <input type="checkbox" class="page-checkbox" data-page="${b.pageNum}"
+                           onchange="togglePage(${b.pageNum}, this)">
+                    Page ${b.pageNum}
+                </label>
+            `;
+                wrap.appendChild(overlay);
+            }
+
+            container.innerHTML = '';
+            container.appendChild(wrap);
+
         } catch (err) {
             container.innerHTML = '<p style="color:#f87171;grid-column:1/-1;">Failed to load PDF preview.</p>';
             console.error(err);
         }
     }
 
-    // ── High-DPI aware zoom render: canvas draws at full device pixel
-    // density (baseScale × zoomLevel × devicePixelRatio), while the
-    // CSS display size is set separately so the browser never has to
-    // upscale/blur the image. ──
+    function getContentBoundingBox(canvas, ctx) {
+        const { width, height } = canvas;
+        const data = ctx.getImageData(0, 0, width, height).data;
+        const whiteThreshold = 250;
+        let minX = width, minY = height, maxX = 0, maxY = 0;
+        let found = false;
+        const step = 2;
+
+        for (let y = 0; y < height; y += step) {
+            for (let x = 0; x < width; x += step) {
+                const i = (y * width + x) * 4;
+                const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                const isBackground = a === 0 || (r > whiteThreshold && g > whiteThreshold && b > whiteThreshold);
+                if (!isBackground) {
+                    found = true;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (!found) return { minX: 0, minY: 0, maxX: width, maxY: height };
+        return { minX, minY, maxX, maxY };
+    }
+
+    // Scans pixel data to find the rectangle enclosing all non-white/non-transparent content
+    function getContentBoundingBox(canvas, ctx) {
+        const { width, height } = canvas;
+        const data = ctx.getImageData(0, 0, width, height).data;
+        const whiteThreshold = 250; // treat near-white as background
+        let minX = width, minY = height, maxX = 0, maxY = 0;
+        let found = false;
+
+        // Sample every 2px for speed on large pages
+        const step = 2;
+        for (let y = 0; y < height; y += step) {
+            for (let x = 0; x < width; x += step) {
+                const i = (y * width + x) * 4;
+                const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                const isBackground = a === 0 || (r > whiteThreshold && g > whiteThreshold && b > whiteThreshold);
+                if (!isBackground) {
+                    found = true;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (!found) {
+            // Fallback: whole page has no detectable content, return full canvas
+            return { minX: 0, minY: 0, maxX: width, maxY: height };
+        }
+        return { minX, minY, maxX, maxY };
+    }
+
     async function renderZoomPage(pageNum) {
         const page = await pdfDoc.getPage(pageNum);
         const dpr = window.devicePixelRatio || 1;
 
-        const baseScale = 2.2;
-        const renderScale = baseScale * zoomLevel * dpr;
+        const nativeViewport = page.getViewport({ scale: 1 });
+        const pageAspectRatio = nativeViewport.height / nativeViewport.width; // actual PDF page ratio
+
+        const wrap = document.getElementById('pdfZoomCanvasWrap');
+        const availableWidth = wrap.clientWidth;
+        const availableHeight = wrap.clientHeight;
+
+        // Fit the page's real proportions within available space, capped so it never exceeds it
+        let displayWidth = availableWidth;
+        let displayHeight = displayWidth * pageAspectRatio;
+
+        if (displayHeight > availableHeight) {
+            displayHeight = availableHeight;
+            displayWidth = displayHeight / pageAspectRatio;
+        }
+
+        // Render at higher pixel density for sharpness, independent of display size
+        const pixelWidth = displayWidth * dpr * 2; // 2x oversample
+        const renderScale = pixelWidth / nativeViewport.width;
 
         const viewport = page.getViewport({ scale: renderScale });
         const canvas = document.getElementById('pdfZoomCanvas');
@@ -191,19 +310,13 @@
 
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        canvas.style.width = (viewport.width / dpr) + 'px';
-        canvas.style.height = (viewport.height / dpr) + 'px';
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
 
         await page.render({ canvasContext: ctx, viewport }).promise;
 
         document.getElementById('pdfZoomLabel').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
         document.getElementById('pdfZoomCheckbox').checked = selectedPages.has(pageNum);
-        document.getElementById('zoomLevelLabel').textContent = Math.round(zoomLevel * 100) + '%';
-    }
-
-    function adjustZoomLevel(delta) {
-        zoomLevel = Math.min(3, Math.max(0.5, zoomLevel + delta));
-        renderZoomPage(currentZoomPage);
     }
 
     function openZoom(pageNum) {
@@ -213,20 +326,20 @@
         renderZoomPage(pageNum);
     }
 
-    function closeZoom() {
-        document.getElementById('pdfZoomOverlay').classList.remove('active');
-    }
-
-    function closeZoomOnBackdrop(e) {
-        if (e.target.id === 'pdfZoomOverlay') closeZoom();
-    }
-
     function zoomNav(delta) {
         const next = currentZoomPage + delta;
         if (next < 1 || next > pdfDoc.numPages) return;
         currentZoomPage = next;
         zoomLevel = 1.0; // reset zoom on page navigation too
         renderZoomPage(currentZoomPage);
+    }
+
+    function closeZoom() {
+        document.getElementById('pdfZoomOverlay').classList.remove('active');
+    }
+
+    function closeZoomOnBackdrop(e) {
+        if (e.target.id === 'pdfZoomOverlay') closeZoom();
     }
 
     function toggleFromZoom(checkboxEl) {

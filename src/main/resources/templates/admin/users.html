@@ -47,9 +47,8 @@
           <tr th:each="a : ${accounts}">
             <td class="mono" th:text="${a.staffId}">—</td>
             <td>
-              <span th:with="fullName=${staffNameMap != null and staffNameMap[a.staffId] != null ? staffNameMap[a.staffId] : a.username}"
-                    th:text="${#strings.length(fullName) > 25 ? #strings.substring(fullName, 0, 25) + '...' : fullName}"
-                    th:title="${staffNameMap != null ? staffNameMap[a.staffId] : a.username}">—</span>
+                <span th:with="fullName=${staffNameMap != null and staffNameMap[a.staffId] != null ? staffNameMap[a.staffId] : a.username}"
+                      th:text="${fullName}">—</span>
             </td>
             <td><span class="status-badge status-submitted" th:text="${a.role}">—</span></td>
             <td><span th:if="${a.isActive}" class="status-badge status-superior_approved">Active</span>
