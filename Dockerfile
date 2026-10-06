@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-jre
 
-# Fonts: needed by Apache POI (Excel auto-size columns) and PDF generation
+# Fonts: needed by Apache POI (Excel) and PDF generation
 RUN apt-get update && apt-get install -y --no-install-recommends \
       fontconfig fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*

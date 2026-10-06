@@ -1,18 +1,18 @@
-# Compiled files
-*.class
-
-# Build folders
+# Build output
 target/
-build/
 
-# IDE configs
-*.iml
+# IDE files
+.classpath
+.project
+.factorypath
+.settings/
 .idea/
-.vscode/
+*.iml
 
-# Logs
-*.log
-
-# Sensitive configs
+# Secrets
+.env
+*.env
 application.properties
-application.yml
+application-*.properties
+*.pem
+*.key
