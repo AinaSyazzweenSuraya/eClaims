@@ -1,5 +1,5 @@
 /**
- * IFC E-Claims — OCR Feature (ocr.js)
+ * deCrack E-Claims — OCR Feature (ocr.js)
  *
  * COMPLETELY SEPARATE from claim-form.js
  * This file only runs when OCR_ENABLED = true

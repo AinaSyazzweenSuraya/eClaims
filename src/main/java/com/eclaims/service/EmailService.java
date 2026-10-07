@@ -127,7 +127,7 @@ public class EmailService {
         return "<html><body style='font-family:Segoe UI,Arial,sans-serif;background:#f1f5f9;padding:40px 0;margin:0'>" +
             "<table width='600' align='center' style='background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)'>" +
             "<tr><td style='background:#0f1523;padding:28px 36px'>" +
-            "<div style='color:#fff;font-size:1.2rem;font-weight:700'>🧾 IFC E-Claims System</div></td></tr>" +
+            "<div style='color:#fff;font-size:1.2rem;font-weight:700'>🧾 deCrack E-Claims System</div></td></tr>" +
             "<tr><td style='padding:28px 36px 0'>" +
             "<div style='background:" + color + "20;color:" + color + ";padding:8px 16px;border-radius:99px;display:inline-block;font-size:.8rem;font-weight:700'>" + heading + "</div>" +
             "<p style='color:#475569;font-size:.95rem;margin:16px 0'>" + message + "</p></td></tr>" +
@@ -141,7 +141,7 @@ public class EmailService {
             "<tr><td style='padding:20px 36px 32px;text-align:center'>" +
             "<a href='" + btnUrl + "' style='background:" + color + ";color:#fff;padding:11px 26px;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none'>" + btnLabel + " →</a></td></tr>" +
             "<tr><td style='background:#f8fafc;padding:16px 36px;border-top:1px solid #e2e8f0;text-align:center'>" +
-            "<small style='color:#94a3b8'>IFC E-Claims System · Automated notification · Do not reply</small></td></tr>" +
+            "<small style='color:#94a3b8'>deCrack E-Claims System · Automated notification · Do not reply</small></td></tr>" +
             "</table></body></html>";
     }
 
@@ -168,14 +168,14 @@ public class EmailService {
         message.setTo(recipientEmail);
 
         message.setSubject(
-                "IFC E-Claims - Password Reset"
+                "deCrack E-Claims - Password Reset"
         );
 
         message.setText(
                 "Dear User,\n\n" +
 
                         "We received a request to reset your " +
-                        "IFC E-Claims password.\n\n" +
+                        "deCrack E-Claims password.\n\n" +
 
                         "Please click the link below to reset your password:\n\n" +
 
@@ -187,7 +187,7 @@ public class EmailService {
                         "please ignore this email.\n\n" +
 
                         "Regards,\n" +
-                        "IFC E-Claims"
+                        "deCrack E-Claims"
         );
 
         mailSender.send(message);

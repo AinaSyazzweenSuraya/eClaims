@@ -6,7 +6,7 @@ import java.math.RoundingMode;
 import java.time.LocalTime;
 
 /**
- * All claim calculation rules for IFC E-Claims.
+ * All claim calculation rules for deCrack E-Claims.
  */
 @Service
 public class CalculationService {

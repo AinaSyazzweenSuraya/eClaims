@@ -1,5 +1,5 @@
 /**
- * IFC E-Claims — Loading Skeleton (skeleton.js)
+ * deCrack E-Claims — Loading Skeleton (skeleton.js)
  *
  * COMPLETELY SEPARATE from claim-form.js and all other JS files.
  * Zero impact on existing functionality.

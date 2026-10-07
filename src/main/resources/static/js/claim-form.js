@@ -1,5 +1,5 @@
 /**
- * IFC E-Claims — Claim Form JavaScript
+ * deCrack E-Claims — Claim Form JavaScript
  * Handles: dynamic rows, auto-calculations, AJAX save/submit, row-level attachments
  */
 

@@ -1,5 +1,5 @@
 /* ================================================================
-   IFC E-Claims System — Main Stylesheet
+   deCrack E-Claims System — Main Stylesheet
    ================================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -133,6 +133,19 @@ a { text-decoration: none; color: inherit; }
   transition: all .15s; font-family: var(--font-main);
 }
 .btn-logout:hover { background: rgba(220,38,38,.15); color: #fca5a5; border-color: rgba(220,38,38,.3); }
+
+a.btn-login.center-align {
+  display: block;
+  width: fit-content;
+  margin: 6px auto 0;
+  padding: 13px 28px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.center-align{
+  text-align: center;
+}
 
 /* ── PAGE HEADER ─────────────────────────────────────────────── */
 .page-header {
@@ -588,11 +601,173 @@ body.dark-mode .btn-attach-section.has-file { background: var(--success-light); 
 .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); outline: none; }
 .form-label-sm { font-size: .8rem; font-weight: 600; color: #374151; display: block; margin-bottom: .35rem; }
 
-/* ── ERROR PAGE ──────────────────────────────────────────────── */
-.error-box { text-align: center; max-width: 460px; padding: 2rem; }
-.error-code { font-size: 5rem; font-weight: 800; color: var(--text-main); line-height: 1; }
-.error-title { font-size: 1.3rem; font-weight: 700; margin: .75rem 0; }
-.error-msg { color: var(--text-muted); font-size: .95rem; line-height: 1.6; margin-bottom: 2rem; }
+/* ── ERROR PAGE ──────────────────────────────────────────────────
+   Replace the old "ERROR PAGE" block (.error-box, .error-code,
+   .error-title, .error-msg) in main.css with everything below.
+   ────────────────────────────────────────────────────────────── */
+
+/* ── Page-specific styles (error page only) ─────────────────── */
+.err-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--canvas);
+  font-family: var(--font-main);
+}
+
+/* Left: brand panel, same recipe as the login page */
+.err-brand {
+  position: relative;
+  overflow: hidden;
+  background: var(--sidebar-bg);
+  background-image:
+          radial-gradient(circle at 100% 0%, rgba(245,158,11,.30), transparent 55%),
+          radial-gradient(circle at 0% 100%, rgba(37,99,235,.22), transparent 55%);
+  padding: 3rem 3.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #fff;
+}
+.err-brand-head { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+.err-brand-head .brand-logo { width: 46px; height: 46px; font-size: 1.1rem; border-radius: 12px; }
+.err-brand-name { font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; }
+.err-brand-sub  { font-size: .8rem; color: #8a99b4; font-weight: 500; }
+
+/* The one memorable element: the oversized status code */
+.err-ghost-code {
+  position: absolute;
+  left: 2.5rem; bottom: -2.2rem;
+  font-size: clamp(11rem, 24vw, 21rem);
+  font-weight: 800;
+  line-height: .85;
+  letter-spacing: -.06em;
+  color: transparent;
+  background: linear-gradient(180deg, rgba(245,158,11,.55) 0%, rgba(245,158,11,.06) 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  user-select: none;
+  pointer-events: none;
+}
+.err-ghost-code::after {          /* thin outline for definition */
+  content: attr(data-code);
+  position: absolute; inset: 0;
+  -webkit-text-stroke: 1.5px rgba(245,158,11,.35);
+  color: transparent;
+  background: none;
+}
+
+.err-brand-foot {
+  position: relative; z-index: 1;
+  font-size: .85rem; color: #8a99b4; line-height: 1.6; max-width: 320px;
+}
+
+/* Right: content card */
+.err-main {
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem;
+  background:
+          radial-gradient(60rem 40rem at 70% 40%, rgba(29,78,216,.05), transparent 60%),
+          var(--canvas);
+}
+.err-card {
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 2.75rem 2.5rem 2.25rem;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 28px 60px -24px rgba(15,23,42,.22);
+}
+
+/* Variant colors drive the icon chip + status pill */
+.err-card { --v: var(--danger);  --v-bg: var(--danger-light); }
+.err-card[data-variant="forbidden"] { --v: var(--accent);  --v-bg: var(--accent-light); }
+.err-card[data-variant="notfound"]  { --v: var(--primary); --v-bg: var(--primary-light); }
+
+.err-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v-bg); color: var(--v);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--v) 18%, transparent);
+  margin-bottom: 1.5rem;
+}
+.err-icon svg { width: 30px; height: 30px; }
+
+.err-status {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono);
+  font-size: .78rem; font-weight: 500;
+  color: var(--v);
+  background: var(--v-bg);
+  padding: .25rem .75rem; border-radius: 99px;
+  margin-bottom: .9rem;
+}
+.err-status::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--v);
+}
+
+.err-title {
+  font-size: 1.85rem; font-weight: 800; letter-spacing: -.025em;
+  color: var(--text-main); line-height: 1.15;
+}
+.err-msg {
+  margin-top: .7rem;
+  font-size: .95rem; line-height: 1.65; color: var(--text-muted);
+  max-width: 38ch;
+}
+
+.err-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+.err-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: .75rem 1.4rem; border-radius: 11px;
+  font-family: var(--font-main); font-size: .9rem; font-weight: 600;
+  cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s, transform .15s;
+}
+.err-btn svg { width: 16px; height: 16px; }
+.err-btn-primary {
+  background: var(--primary); color: #fff; border: 1.5px solid var(--primary);
+  box-shadow: 0 6px 16px -6px rgba(29,78,216,.55);
+}
+.err-btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; transform: translateY(-1px); }
+.err-btn-ghost {
+  background: var(--surface); color: var(--text-main); border: 1.5px solid var(--border);
+}
+.err-btn-ghost:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+
+.err-meta {
+  margin-top: 2rem; padding-top: 1.1rem;
+  border-top: 1px dashed var(--border);
+  font-size: .78rem; color: var(--text-faint); line-height: 1.6;
+}
+.err-meta code {
+  font-family: var(--font-mono); color: var(--text-muted);
+  background: #f1f5f9; padding: .1rem .4rem; border-radius: 5px;
+  word-break: break-all;
+}
+
+/* Dark mode (uses the same body.dark-mode hook as the rest of the app) */
+body.dark-mode .err-card  { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 28px 60px -24px rgba(0,0,0,.7); }
+body.dark-mode .err-meta code { background: #101828; }
+body.dark-mode .err-btn-primary { color: #06101f; }
+body.dark-mode .err-btn-primary:hover { color: #06101f; }
+
+/* Single entrance for the card, respects reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .err-card { animation: errIn .45s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes errIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+}
+
+/* Responsive: stack, shrink brand panel into a banner */
+@media (max-width: 860px) {
+  .err-page { grid-template-columns: 1fr; }
+  .err-brand { padding: 1.5rem 1.5rem 7rem; min-height: 0; }
+  .err-brand-foot { display: none; }
+  .err-ghost-code { font-size: 9rem; left: 1.25rem; bottom: -1.5rem; }
+  .err-main { padding: 0 1rem 2rem; margin-top: -3.5rem; position: relative; z-index: 2; background: transparent; }
+  .err-card { padding: 2rem 1.5rem 1.75rem; }
+  .err-title { font-size: 1.5rem; }
+  .err-actions > * { flex: 1 1 100%; }
+}
 
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 768px) {

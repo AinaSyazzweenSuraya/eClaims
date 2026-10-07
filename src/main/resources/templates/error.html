@@ -1,19 +1,85 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
-<head><meta charset="UTF-8"/><title>Error — IFC E-Claims</title>
-<style>body{font-family:sans-serif;background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-.error-box{text-align:center;max-width:460px;padding:2rem}
-.error-code{font-size:5rem;font-weight:800;color:#0f172a;line-height:1}
-.error-title{font-size:1.3rem;font-weight:700;margin:.75rem 0}
-.error-msg{color:#64748b;font-size:.95rem;line-height:1.6;margin-bottom:2rem}
-.btn{display:inline-flex;align-items:center;gap:.4rem;background:#2563eb;color:#fff;padding:.7rem 1.5rem;border-radius:9px;font-weight:600;text-decoration:none}</style>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Error — deCrack E-Claims</title>
+
+  <!-- All styling lives in main.css (ERROR PAGE section) -->
+  <link rel="stylesheet" th:href="@{/css/main.css}" href="/css/main.css"/>
 </head>
-<body>
-<div class="error-box">
-  <div th:if="${status == 403}"><div class="error-code">403</div><div class="error-title">Access Denied</div><p class="error-msg">You don't have permission to view this page.</p></div>
-  <div th:if="${status == 404}"><div class="error-code">404</div><div class="error-title">Page Not Found</div><p class="error-msg">The page you're looking for doesn't exist.</p></div>
-  <div th:if="${status != 403 and status != 404}"><div class="error-code" th:text="${status}">500</div><div class="error-title">Something Went Wrong</div><p class="error-msg">An unexpected error occurred. Please try again.</p></div>
-  <a href="/dashboard" class="btn">← Back to Dashboard</a>
+
+<body th:with="code=${status != null ? status : 500},
+               variant=${code == 403 ? 'forbidden' : (code == 404 ? 'notfound' : 'error')},
+               title=${code == 403 ? 'Access denied' : (code == 404 ? 'Page not found' : 'Something went wrong')},
+               msg=${code == 403 ? 'Your account doesn''t have permission to open this page. If you need access, ask your administrator.'
+                   : (code == 404 ? 'This page doesn''t exist or may have been moved. Check the address, or head back to your dashboard.'
+                   : 'An unexpected error occurred on our side. Try again in a moment, and contact support if it keeps happening.')}">
+
+<div class="err-page">
+
+  <!-- Brand panel -->
+  <aside class="err-brand">
+    <div class="err-brand-head">
+      <div class="brand-logo">dC</div>
+      <div>
+        <div class="err-brand-name">E-Claims System</div>
+        <div class="err-brand-sub">deCrack Sdn Bhd</div>
+      </div>
+    </div>
+
+    <p class="err-brand-foot">
+      Your claims and receipts are safe. Nothing on this page affects submitted or saved claims.
+    </p>
+
+    <div class="err-ghost-code" th:text="${code}" th:attr="data-code=${code}" aria-hidden="true" data-code="500">500</div>
+  </aside>
+
+  <!-- Content -->
+  <main class="err-main">
+    <section class="err-card" th:attr="data-variant=${variant}" data-variant="error" role="alert">
+
+      <div class="err-icon" aria-hidden="true">
+        <!-- 403: lock -->
+        <svg th:if="${code == 403}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2" fill="currentColor"/>
+        </svg>
+        <!-- 404: search -->
+        <svg th:if="${code == 404}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.9-4.9"/><path d="M8.2 10.5h4.6"/>
+        </svg>
+        <!-- other: warning -->
+        <svg th:unless="${code == 403 or code == 404}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.3 3.9 1.8 18.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4.5"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/>
+        </svg>
+      </div>
+
+      <div class="err-status" th:text="'Error ' + ${code}">Error 500</div>
+
+      <h1 class="err-title" th:text="${title}">Something went wrong</h1>
+      <p class="err-msg" th:text="${msg}">An unexpected error occurred. Try again in a moment.</p>
+
+      <div class="err-actions">
+
+        <!-- Signed in: go to the dashboard -->
+        <a sec:authorize="isAuthenticated()" th:href="@{/dashboard}" href="/dashboard" class="err-btn err-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+          Back to dashboard
+        </a>
+        <!-- Signed out (e.g. after logout or expired session): go to login -->
+        <a sec:authorize="!isAuthenticated()" th:href="@{/login}" href="/login" class="err-btn err-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+          Back to login
+        </a>
+      </div>
+
+      <!-- Only rendered when Spring provides the failing path -->
+      <div class="err-meta" th:if="${path != null}">
+        Requested: <code th:text="${path}">/some/path</code>
+      </div>
+    </section>
+  </main>
+
 </div>
 </body>
 </html>
