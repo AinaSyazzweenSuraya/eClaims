@@ -202,11 +202,25 @@ a.btn-login.center-align {
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
-.card-panel-title { font-size: .95rem; font-weight: 700; color: var(--text-main); }
+
+.card-panel-title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* ── TABLES ──────────────────────────────────────────────────── */
 .table-wrapper { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+/* Centered columns (Form No, Date, Status, Actions) */
+.data-table .col-center { text-align: center; }
+.data-table .col-center .action-btns { justify-content: center; }
+
+/* Even column widths so the columns line up under their headers */
+.claims-table { table-layout: fixed; min-width: 640px; }
 .data-table thead tr { background: #f8fafc; }
 .data-table thead th {
   padding: .75rem 1rem; text-align: left;

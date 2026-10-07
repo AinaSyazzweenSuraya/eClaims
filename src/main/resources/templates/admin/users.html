@@ -2,124 +2,146 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head th:replace="~{fragments/layout :: head('User Accounts')}"></head>
 <body class="layout-body">
+<!-- Page stylesheet (main.css is already loaded by the layout head fragment) -->
+<link rel="stylesheet" th:href="@{/css/user.css}"/>
+
 <div th:replace="~{fragments/layout :: sidebar}"></div>
+
 <main class="main-content">
   <div class="page-header">
-    <div><h1 class="page-title">User Accounts</h1><p class="page-sub">Create and manage login accounts</p></div>
+    <div>
+      <h1 class="page-title">User Accounts</h1>
+      <p class="page-sub">Create and manage login accounts</p>
+    </div>
     <a href="/admin/staff/register" class="btn-approve">
       <i class="bi bi-person-plus me-1"></i> Register New Staff
     </a>
   </div>
+
   <div th:if="${successMsg}" class="alert-banner success" th:text="${successMsg}"></div>
   <div th:if="${errorMsg}"   class="alert-banner danger"  th:text="${errorMsg}"></div>
-  <div class="card-panel" style="margin-bottom:1.5rem;padding:1.5rem">
-    <h2 class="card-panel-title" style="margin-bottom:1rem">Create New Account</h2>
+
+  <!-- ── Create account ─────────────────────────────────────── -->
+  <div class="card-panel panel-pad">
+    <h2 class="card-panel-title">Create New Account</h2>
     <form th:action="@{/admin/users/create}" method="post">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:1rem">
+      <div class="create-grid">
         <div>
-          <label class="form-label-sm">Staff *</label>
-          <select name="staffId" class="form-input" required>
+          <label class="form-label-sm" for="staffId">Staff *</label>
+          <select id="staffId" name="staffId" class="form-input" required>
             <option value="">Select staff...</option>
-            <option th:each="s : ${allStaff}" th:value="${s.staffId}" th:text="${s.staffId} + ' — ' + ${s.name}">—</option>
+            <option th:each="s : ${allStaff}" th:value="${s.staffId}"
+                    th:text="${s.staffId} + ' — ' + ${s.name}">—</option>
           </select>
         </div>
         <div>
-          <label class="form-label-sm">Password *</label>
-          <input type="password" name="password" class="form-input" minlength="8" required placeholder="Min. 8 chars"/>
+          <label class="form-label-sm" for="password">Password *</label>
+          <input id="password" type="password" name="password" class="form-input"
+                 minlength="8" required placeholder="Min. 8 chars"/>
         </div>
         <div>
-          <label class="form-label-sm">Role *</label>
-          <select name="role" class="form-input">
+          <label class="form-label-sm" for="role">Role *</label>
+          <select id="role" name="role" class="form-input">
             <option th:each="r : ${roles}" th:value="${r}" th:text="${r}">STAFF</option>
           </select>
         </div>
       </div>
-      <button type="submit" class="btn-approve"><i class="bi bi-person-plus me-1"></i> Create Account</button>
+      <button type="submit" class="btn-approve">
+        <i class="bi bi-person-plus me-1"></i> Create Account
+      </button>
     </form>
   </div>
+
+  <!-- ── All accounts ───────────────────────────────────────── -->
   <div class="card-panel">
-    <div class="card-panel-header"><h2 class="card-panel-title"><i class="bi bi-people me-2"></i>All Accounts</h2></div>
+    <div class="card-panel-header">
+      <h2 class="card-panel-title"><i class="bi bi-people me-2"></i>All Accounts</h2>
+    </div>
     <div class="table-wrapper">
       <table class="data-table">
-        <thead><tr><th>Staff ID</th><th>Name</th><th>Role</th><th>Active</th><th>Last Login</th><th>Actions</th></tr></thead>
+        <thead>
+        <tr>
+          <th>Staff ID</th><th>Name</th><th>Role</th>
+          <th>Active</th><th>Last Login</th><th>Actions</th>
+        </tr>
+        </thead>
         <tbody>
-          <tr th:each="a : ${accounts}">
-            <td class="mono" th:text="${a.staffId}">—</td>
-            <td>
-                <span th:with="fullName=${staffNameMap != null and staffNameMap[a.staffId] != null ? staffNameMap[a.staffId] : a.username}"
-                      th:text="${fullName}">—</span>
-            </td>
-            <td><span class="status-badge status-submitted" th:text="${a.role}">—</span></td>
-            <td><span th:if="${a.isActive}" class="status-badge status-superior_approved">Active</span>
-                <span th:unless="${a.isActive}" class="status-badge status-pm_rejected">Inactive</span></td>
-            <td th:text="${a.lastLogin != null ? #temporals.format(a.lastLogin,'dd MMM yyyy HH:mm') : '—'}">—</td>
-            <td>
-              <div class="action-btns">
-                <!-- Toggle Active/Inactive -->
-                <form th:action="@{/admin/users/{id}/toggle(id=${a.userId})}" method="post" style="display:inline">
-                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                  <button type="submit" class="btn-action" th:title="${a.isActive ? 'Deactivate' : 'Activate'}">
-                    <i th:class="${a.isActive ? 'bi bi-person-dash' : 'bi bi-person-check'}"></i>
-                  </button>
-                </form>
-                <!-- Reset Password -->
-                <button type="button" class="btn-action"
-                        title="Reset Password to default"
-                        th:data-user-id="${a.userId}"
-                        th:data-username="${a.username}"
-                        onclick="confirmReset(this.dataset.userId, this.dataset.username)">
-                  <i class="bi bi-key"></i>
+        <tr th:each="a : ${accounts}">
+          <td class="mono" th:text="${a.staffId}">—</td>
+          <td>
+              <span th:with="fullName=${staffNameMap != null and staffNameMap[a.staffId] != null ? staffNameMap[a.staffId] : a.username}"
+                    th:text="${fullName}">—</span>
+          </td>
+          <td><span class="status-badge status-submitted" th:text="${a.role}">—</span></td>
+          <td>
+            <span th:if="${a.isActive}"     class="status-badge status-superior_approved">Active</span>
+            <span th:unless="${a.isActive}" class="status-badge status-pm_rejected">Inactive</span>
+          </td>
+          <td th:text="${a.lastLogin != null ? #temporals.format(a.lastLogin,'dd MMM yyyy HH:mm') : '—'}">—</td>
+          <td>
+            <div class="action-btns">
+              <!-- Toggle Active/Inactive -->
+              <form th:action="@{/admin/users/{id}/toggle(id=${a.userId})}" method="post" class="inline-form">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-action"
+                        th:title="${a.isActive ? 'Deactivate' : 'Activate'}">
+                  <i th:class="${a.isActive ? 'bi bi-person-dash' : 'bi bi-person-check'}"></i>
                 </button>
-                <!-- Change Role — NEW -->
-                <button type="button" class="btn-action"
-                        title="Change Role"
-                        th:data-user-id="${a.userId}"
-                        th:data-username="${a.username}"
-                        th:data-current-role="${a.role}"
-                        onclick="openRoleModal(this.dataset.userId, this.dataset.username, this.dataset.currentRole)">
-                  <i class="bi bi-person-gear"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
+              </form>
+
+              <!-- Reset Password -->
+              <button type="button" class="btn-action"
+                      title="Reset Password to default"
+                      th:data-user-id="${a.userId}"
+                      th:data-username="${a.username}"
+                      onclick="confirmReset(this.dataset.userId, this.dataset.username)">
+                <i class="bi bi-key"></i>
+              </button>
+
+              <!-- Change Role -->
+              <button type="button" class="btn-action"
+                      title="Change Role"
+                      th:data-user-id="${a.userId}"
+                      th:data-username="${a.username}"
+                      th:data-current-role="${a.role}"
+                      onclick="openRoleModal(this.dataset.userId, this.dataset.username, this.dataset.currentRole)">
+                <i class="bi bi-person-gear"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
   </div>
 </main>
 
-<!-- ── Reset Password Confirmation Modal ─────────────────── -->
-<div id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:14px;padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:1rem">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-      <div style="width:44px;height:44px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <i class="bi bi-key" style="color:#d97706;font-size:1.2rem"></i>
-      </div>
+<!-- ── Reset Password Modal ───────────────────────────────── -->
+<div id="resetModal" class="modal-overlay">
+  <div class="modal-box sm">
+    <div class="modal-head">
+      <div class="modal-icon warn"><i class="bi bi-key"></i></div>
       <div>
-        <div style="font-weight:700;font-size:1rem;color:#0f172a">Reset Password</div>
-        <div style="font-size:.82rem;color:#64748b">This will reset the account password</div>
+        <div class="modal-title">Reset Password</div>
+        <div class="modal-sub">This will reset the account password</div>
       </div>
     </div>
-    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.25rem">
-      <p style="font-size:.875rem;color:#92400e;margin:0">
+
+    <div class="warn-box">
+      <p>
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         The password for <strong id="resetUsername"></strong> will be reset to:
-        <code style="background:#fef9c3;padding:2px 8px;border-radius:4px;font-weight:700">password</code>
+        <code>password</code>
       </p>
-      <p style="font-size:.8rem;color:#92400e;margin:.5rem 0 0">
-        Please inform the staff to login and change their password immediately.
-      </p>
+      <p class="small">Please inform the staff to login and change their password immediately.</p>
     </div>
-    <div style="display:flex;gap:.75rem;justify-content:flex-end">
-      <button type="button" onclick="closeResetModal()"
-              style="padding:.6rem 1.25rem;border:1.5px solid #e2e8f0;border-radius:9px;background:#fff;cursor:pointer;font-size:.875rem;font-weight:600">
-        Cancel
-      </button>
-      <form id="resetForm" method="post" style="display:inline">
+
+    <div class="modal-actions">
+      <button type="button" class="modal-btn cancel" onclick="closeResetModal()">Cancel</button>
+      <form id="resetForm" method="post" class="inline-form">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit"
-                style="padding:.6rem 1.25rem;background:#d97706;color:#fff;border:none;border-radius:9px;cursor:pointer;font-size:.875rem;font-weight:600">
+        <button type="submit" class="modal-btn warn">
           <i class="bi bi-key me-1"></i> Yes, Reset Password
         </button>
       </form>
@@ -127,68 +149,61 @@
   </div>
 </div>
 
-<!-- ── Change Role Modal — NEW ────────────────────────────── -->
-<div id="roleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:14px;padding:2rem;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:1rem">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
-      <div style="width:44px;height:44px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <i class="bi bi-person-gear" style="color:#2563eb;font-size:1.2rem"></i>
-      </div>
+<!-- ── Change Role Modal ──────────────────────────────────── -->
+<div id="roleModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-icon info"><i class="bi bi-person-gear"></i></div>
       <div>
-        <div style="font-weight:700;font-size:1rem;color:#0f172a">Change Role</div>
-        <div style="font-size:.82rem;color:#64748b">Update access level for <strong id="roleUsername"></strong></div>
+        <div class="modal-title">Change Role</div>
+        <div class="modal-sub">Update access level for <strong id="roleUsername"></strong></div>
       </div>
     </div>
 
-    <!-- Role options -->
-    <div style="display:grid;gap:.6rem;margin-bottom:1.25rem">
-      <label id="role-STAFF" style="display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s" onclick="selectRole('STAFF')">
-        <input type="radio" name="roleChoice" value="STAFF" style="accent-color:#2563eb;width:16px;height:16px;flex-shrink:0"/>
+    <div class="role-options">
+      <label class="role-option" data-role="STAFF" onclick="selectRole('STAFF')">
+        <input type="radio" name="roleChoice" value="STAFF"/>
         <div>
-          <div style="font-weight:600;font-size:.875rem">STAFF</div>
-          <div style="font-size:.75rem;color:#64748b">Submit and track own claims only</div>
+          <div class="role-name">STAFF</div>
+          <div class="role-desc">Submit and track own claims only</div>
         </div>
       </label>
-      <label id="role-MANAGER" style="display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s" onclick="selectRole('MANAGER')">
-        <input type="radio" name="roleChoice" value="MANAGER" style="accent-color:#2563eb;width:16px;height:16px;flex-shrink:0"/>
+      <label class="role-option" data-role="MANAGER" onclick="selectRole('MANAGER')">
+        <input type="radio" name="roleChoice" value="MANAGER"/>
         <div>
-          <div style="font-weight:600;font-size:.875rem">MANAGER</div>
-          <div style="font-size:.75rem;color:#64748b">Approve assigned PM rows</div>
+          <div class="role-name">MANAGER</div>
+          <div class="role-desc">Approve assigned PM rows</div>
         </div>
       </label>
-      <label id="role-SUPERIOR" style="display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s" onclick="selectRole('SUPERIOR')">
-        <input type="radio" name="roleChoice" value="SUPERIOR" style="accent-color:#2563eb;width:16px;height:16px;flex-shrink:0"/>
+      <label class="role-option" data-role="SUPERIOR" onclick="selectRole('SUPERIOR')">
+        <input type="radio" name="roleChoice" value="SUPERIOR"/>
         <div>
-          <div style="font-weight:600;font-size:.875rem">SUPERIOR</div>
-          <div style="font-size:.75rem;color:#64748b">Authorize full claims</div>
+          <div class="role-name">SUPERIOR</div>
+          <div class="role-desc">Authorize full claims</div>
         </div>
       </label>
-      <label id="role-FINANCE" style="display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s" onclick="selectRole('FINANCE')">
-        <input type="radio" name="roleChoice" value="FINANCE" style="accent-color:#2563eb;width:16px;height:16px;flex-shrink:0"/>
+      <label class="role-option" data-role="FINANCE" onclick="selectRole('FINANCE')">
+        <input type="radio" name="roleChoice" value="FINANCE"/>
         <div>
-          <div style="font-weight:600;font-size:.875rem">FINANCE</div>
-          <div style="font-size:.75rem;color:#64748b">Process approved claims for payment</div>
+          <div class="role-name">FINANCE</div>
+          <div class="role-desc">Process approved claims for payment</div>
         </div>
       </label>
-      <label id="role-ADMIN" style="display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s" onclick="selectRole('ADMIN')">
-        <input type="radio" name="roleChoice" value="ADMIN" style="accent-color:#2563eb;width:16px;height:16px;flex-shrink:0"/>
+      <label class="role-option" data-role="ADMIN" onclick="selectRole('ADMIN')">
+        <input type="radio" name="roleChoice" value="ADMIN"/>
         <div>
-          <div style="font-weight:600;font-size:.875rem">ADMIN</div>
-          <div style="font-size:.75rem;color:#64748b">Full system access including user management</div>
+          <div class="role-name">ADMIN</div>
+          <div class="role-desc">Full system access including user management</div>
         </div>
       </label>
     </div>
 
-    <div style="display:flex;gap:.75rem;justify-content:flex-end">
-      <button type="button" onclick="closeRoleModal()"
-              style="padding:.6rem 1.25rem;border:1.5px solid #e2e8f0;border-radius:9px;background:#fff;cursor:pointer;font-size:.875rem;font-weight:600">
-        Cancel
-      </button>
-      <form id="roleForm" method="post" style="display:inline">
+    <div class="modal-actions">
+      <button type="button" class="modal-btn cancel" onclick="closeRoleModal()">Cancel</button>
+      <form id="roleForm" method="post" class="inline-form">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <input type="hidden" id="roleInput" name="role" value=""/>
-        <button type="submit"
-                style="padding:.6rem 1.25rem;background:#2563eb;color:#fff;border:none;border-radius:9px;cursor:pointer;font-size:.875rem;font-weight:600">
+        <button type="submit" class="modal-btn primary">
           <i class="bi bi-check-lg me-1"></i> Save Role
         </button>
       </form>
@@ -197,51 +212,46 @@
 </div>
 
 <script>
-// ── Reset Password ────────────────────────────────────────────
-function confirmReset(userId, username) {
+  // ── Reset Password ────────────────────────────────────────────
+  const resetModal = document.getElementById('resetModal');
+
+  function confirmReset(userId, username) {
     document.getElementById('resetUsername').textContent = username;
     document.getElementById('resetForm').action = '/admin/users/' + userId + '/reset-password';
-    document.getElementById('resetModal').style.display = 'flex';
-}
-function closeResetModal() {
-    document.getElementById('resetModal').style.display = 'none';
-}
-document.getElementById('resetModal').addEventListener('click', function(e) {
-    if (e.target === this) closeResetModal();
-});
+    resetModal.classList.add('open');
+  }
+  function closeResetModal() {
+    resetModal.classList.remove('open');
+  }
+  resetModal.addEventListener('click', e => { if (e.target === resetModal) closeResetModal(); });
 
-// ── Change Role ───────────────────────────────────────────────
-function openRoleModal(userId, username, currentRole) {
-    document.getElementById('roleUsername').textContent = username;
-    document.getElementById('roleForm').action = '/admin/users/' + userId + '/change-role';
-    document.getElementById('roleInput').value = currentRole;
+  // ── Change Role ───────────────────────────────────────────────
+  const roleModal = document.getElementById('roleModal');
 
-    // Reset all labels to default style
-    ['STAFF','MANAGER','SUPERIOR','FINANCE','ADMIN'].forEach(r => {
-        const label = document.getElementById('role-' + r);
-        const radio = label.querySelector('input[type=radio]');
-        radio.checked = (r === currentRole);
-        label.style.borderColor = (r === currentRole) ? '#2563eb' : '#e2e8f0';
-        label.style.background  = (r === currentRole) ? '#eff6ff' : '#fff';
-    });
-
-    document.getElementById('roleModal').style.display = 'flex';
-}
-function selectRole(role) {
-    ['STAFF','MANAGER','SUPERIOR','FINANCE','ADMIN'].forEach(r => {
-        const label = document.getElementById('role-' + r);
-        label.style.borderColor = (r === role) ? '#2563eb' : '#e2e8f0';
-        label.style.background  = (r === role) ? '#eff6ff' : '#fff';
-        label.querySelector('input[type=radio]').checked = (r === role);
+  function highlightRole(role) {
+    roleModal.querySelectorAll('.role-option').forEach(label => {
+      const active = label.dataset.role === role;
+      label.classList.toggle('selected', active);
+      label.querySelector('input[type=radio]').checked = active;
     });
     document.getElementById('roleInput').value = role;
-}
-function closeRoleModal() {
-    document.getElementById('roleModal').style.display = 'none';
-}
-document.getElementById('roleModal').addEventListener('click', function(e) {
-    if (e.target === this) closeRoleModal();
-});
+  }
+  function openRoleModal(userId, username, currentRole) {
+    document.getElementById('roleUsername').textContent = username;
+    document.getElementById('roleForm').action = '/admin/users/' + userId + '/change-role';
+    highlightRole(currentRole);
+    roleModal.classList.add('open');
+  }
+  function selectRole(role) { highlightRole(role); }
+  function closeRoleModal() {
+    roleModal.classList.remove('open');
+  }
+  roleModal.addEventListener('click', e => { if (e.target === roleModal) closeRoleModal(); });
+
+  // Close either modal with Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeResetModal(); closeRoleModal(); }
+  });
 </script>
 
 </body>

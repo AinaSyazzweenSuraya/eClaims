@@ -190,7 +190,7 @@ public class PdfService {
         PdfPCell titleCell = new PdfPCell();
         titleCell.setBackgroundColor(new BaseColor(15,21,35)); titleCell.setBorder(Rectangle.NO_BORDER); titleCell.setPadding(10);
         titleCell.addElement(new Phrase("E-CLAIM APPLY FORM", fTitle));
-        PdfPCell brandCell = new PdfPCell(new Phrase("InfoConnect",
+        PdfPCell brandCell = new PdfPCell(new Phrase("deCrack",
             FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.WHITE)));
         brandCell.setBackgroundColor(new BaseColor(220,38,38)); brandCell.setBorder(Rectangle.NO_BORDER);
         brandCell.setPadding(10); brandCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -257,7 +257,7 @@ public class PdfService {
         bc.setBackgroundColor(new BaseColor(15,21,35)); bc.setBorder(Rectangle.NO_BORDER); bc.setPadding(8);
         bc.addElement(new Phrase("E-CLAIM APPLY FORM",
             FontFactory.getFont(FontFactory.HELVETICA_BOLD,11,new BaseColor(15,21,35))));
-        PdfPCell brc = new PdfPCell(new Phrase("InfoConnect",
+        PdfPCell brc = new PdfPCell(new Phrase("deCrack",
             FontFactory.getFont(FontFactory.HELVETICA_BOLD,9,BaseColor.WHITE)));
         brc.setBackgroundColor(new BaseColor(220,38,38)); brc.setBorder(Rectangle.NO_BORDER);
         brc.setPadding(8); brc.setHorizontalAlignment(Element.ALIGN_RIGHT); brc.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -331,7 +331,7 @@ public class PdfService {
         bc.setBackgroundColor(new BaseColor(15,21,35)); bc.setBorder(Rectangle.NO_BORDER); bc.setPadding(8);
         bc.addElement(new Phrase("E-CLAIM APPLY FORM",
             FontFactory.getFont(FontFactory.HELVETICA_BOLD,11,new BaseColor(15,21,35))));
-        PdfPCell brc = new PdfPCell(new Phrase("InfoConnect",
+        PdfPCell brc = new PdfPCell(new Phrase("deCrack",
             FontFactory.getFont(FontFactory.HELVETICA_BOLD,9,BaseColor.WHITE)));
         brc.setBackgroundColor(new BaseColor(220,38,38)); brc.setBorder(Rectangle.NO_BORDER);
         brc.setPadding(8); brc.setHorizontalAlignment(Element.ALIGN_RIGHT); brc.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -424,7 +424,7 @@ public class PdfService {
         titleCell.setBorder(Rectangle.NO_BORDER); titleCell.setPadding(10);
         titleCell.addElement(new Phrase("E-CLAIM APPLY FORM", fTitle));
         com.itextpdf.text.Font fWhite = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.WHITE);
-        PdfPCell brandCell = new PdfPCell(new Phrase("InfoConnect", fWhite));
+        PdfPCell brandCell = new PdfPCell(new Phrase("deCrack", fWhite));
         brandCell.setBackgroundColor(new BaseColor(220, 38, 38));
         brandCell.setBorder(Rectangle.NO_BORDER); brandCell.setPadding(10);
         brandCell.setHorizontalAlignment(Element.ALIGN_RIGHT);

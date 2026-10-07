@@ -79,21 +79,22 @@
     <!-- Claims table -->
     <div class="card-panel">
       <div class="card-panel-header">
-        <h2 class="card-panel-title"><i class="bi bi-clock-history me-2"></i>My Claims</h2>
+        <h2 class="card-panel-title"><i class="bi bi-clock-history"></i>My Claims</h2>
         <div class="search-box">
           <i class="bi bi-search"></i>
           <input type="text" id="searchInput" placeholder="Search..." oninput="filterTable()"/>
         </div>
       </div>
+
       <div class="table-wrapper">
-        <table class="data-table" id="claimsTable">
+        <table class="data-table claims-table" id="claimsTable">
           <thead>
           <tr>
-            <th>Form No.</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th class="text-end">Total (RM)</th>
-            <th>Actions</th>
+            <th class="col-center">Form No.</th>
+            <th class="col-center">Date</th>
+            <th class="col-center">Status</th>
+            <th class="col-center">Total (RM)</th>
+            <th class="col-center">Actions</th>
           </tr>
           </thead>
           <tbody>
@@ -102,32 +103,42 @@
               <i class="bi bi-inbox"></i>
               <p>
                 No claims yet.
-                <a href="javascript:void(0)"
-                   onclick="openClaimMonth()">
+                <a href="javascript:void(0)" onclick="openClaimMonth()">
                   Create your first claim
                 </a>
               </p>
             </td>
           </tr>
+
           <tr th:each="claim : ${claims}">
-            <td><span class="claim-ref" th:text="'Form #' + ${claim.formId}">—</span></td>
-            <td th:text="${claim.createdDate != null ? #temporals.format(claim.createdDate,'dd MMM yyyy') : '—'}">—</td>
-            <td>
-                <span class="status-badge"
-                      th:classappend="'status-' + ${claim.wfStatus.toLowerCase()}"
-                      th:text="${claim.wfStatus.replace('_',' ')}">DRAFT</span>
+            <td class="col-center">
+              <span class="claim-ref" th:text="'Form #' + ${claim.formId}">—</span>
             </td>
-            <td class="text-end fw-600"
+
+            <td class="col-center"
+                th:text="${claim.createdDate != null ? #temporals.format(claim.createdDate,'dd MMM yyyy') : '—'}">—</td>
+
+            <td class="col-center">
+          <span class="status-badge"
+                th:classappend="'status-' + ${claim.wfStatus.toLowerCase()}"
+                th:text="${claim.wfStatus.replace('_',' ')}">DRAFT</span>
+            </td>
+
+            <td class="col-center fw-600"
                 th:text="${#numbers.formatDecimal(claim.totalClaim != null ? claim.totalClaim : 0,1,'COMMA',2,'POINT')}">0.00</td>
-            <td>
+
+            <td class="col-center">
               <div class="action-btns">
                 <a th:if="${claim.wfStatus == 'DRAFT' or claim.wfStatus == 'PM_REJECTED' or claim.wfStatus == 'SUPERIOR_REJECTED'}"
                    th:href="@{/claims/{id}/edit(id=${claim.workflowId})}"
                    class="btn-action" title="Edit / Resubmit"><i class="bi bi-pencil"></i></a>
+
                 <a th:href="@{/claims/{id}(id=${claim.workflowId})}"
                    class="btn-action" title="View"><i class="bi bi-eye"></i></a>
+
                 <a th:href="@{/claims/pdf/{id}(id=${claim.workflowId})}"
                    class="btn-action" title="Download PDF"><i class="bi bi-file-pdf"></i></a>
+
                 <button th:if="${claim.wfStatus == 'DRAFT'}"
                         type="button" class="btn-action"
                         style="border-color:#fecaca;color:#dc2626"
