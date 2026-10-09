@@ -15,5 +15,6 @@ public class ClaimAttachment {
     @Column(name = "ContentType", length = 100) private String contentType;
     @Column(name = "Status", length = 50) @Builder.Default private String status = "New";
     @Column(name = "DOC_DATE") private LocalDateTime docDate;
+    @Column(name = "Category", length = 80) private String category;
     @PrePersist public void prePersist() { if (this.docDate == null) this.docDate = LocalDateTime.now(); }
 }

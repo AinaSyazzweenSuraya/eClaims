@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.eclaims.entity.*;
 import com.eclaims.service.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,11 +30,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.eclaims.dto.ClaimFormDto;
 import com.eclaims.dto.ClaimRowDto;
 import com.eclaims.dto.StaffClaimBalanceDto;
-import com.eclaims.entity.AuditLog;
-import com.eclaims.entity.ClaimForm;
-import com.eclaims.entity.StaffInfo;
-import com.eclaims.entity.TravelLocation;
-import com.eclaims.entity.TravelMeal;
 import com.eclaims.repository.AuditLogRepository;
 import com.eclaims.repository.ClaimFormRowRepository;
 import com.eclaims.repository.ClaimTypeRepository;
@@ -177,10 +173,44 @@ public class ClaimController {
     @PostMapping("/row/{rowId}/attachment")
     @ResponseBody
     public ResponseEntity<?> uploadRowAttachment(@PathVariable Integer rowId,
-                                                  @RequestParam("file") MultipartFile file) {
+                                                 @RequestParam("file") MultipartFile file,
+                                                 @AuthenticationPrincipal UserDetails user) {
         try {
-            attachmentService.uploadRowAttachment(rowId, file);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Attachment uploaded"));
+            ClaimFormRow row = claimFormRowRepository.findById(rowId)
+                    .orElseThrow(() -> new IllegalArgumentException("Row not found: " + rowId));
+
+            ClaimFormDto form = claimService.loadForm(row.getWorkflowId());
+            if (!canAccess(form.getStaffId(), user))
+                return ResponseEntity.status(403).body(Map.of("success", false, "message", "Access denied"));
+
+            ClaimFormRow saved = attachmentService.uploadRowAttachment(rowId, file);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Attachment uploaded",
+                    "path", saved.getAttachmentPath()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    // ── Upload mileage attachment ───────────────────────────────────
+    @PostMapping("/{workflowId}/mileage-attachment")
+    @ResponseBody
+    public ResponseEntity<?> uploadMileageAttachment(@PathVariable String workflowId,
+                                                     @RequestParam("file") MultipartFile file,
+                                                     @AuthenticationPrincipal UserDetails user) {
+        try {
+            ClaimFormDto form = claimService.loadForm(workflowId);
+            if (!canAccess(form.getStaffId(), user))
+                return ResponseEntity.status(403).body(Map.of("success", false, "message", "Access denied"));
+
+            ClaimAttachment att = attachmentService.uploadMileageAttachment(
+                    workflowId, String.valueOf(form.getFormId()), file);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Attachment uploaded",
+                    "path", att.getStoredFileName()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }

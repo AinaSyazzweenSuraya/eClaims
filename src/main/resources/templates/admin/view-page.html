@@ -6,358 +6,420 @@
 </head>
 <body class="layout-body">
 <div th:replace="~{fragments/layout :: sidebar}"></div>
+
 <main class="main-content">
+    <div class="pdfsel-app">
 
-    <div class="pdfsel-header">
-        <div>
-            <h1 class="pdfsel-title">Select Pages to Download</h1>
-            <p class="pdfsel-subtitle">Choose which pages of the attachment you want to download</p>
-        </div>
-        <a th:href="@{/admin/claims}" class="pdfsel-back-btn">
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
-    </div>
-
-    <div class="pdfsel-panel">
-        <div class="pdfsel-toolbar">
-            <div class="pdfsel-toolbar-title">
-                <i class="bi bi-file-earmark-pdf"></i>
-                <span>Attachment Pages</span>
-                <span class="pdfsel-page-count" id="pageCountBadge"></span>
+        <!-- ===== Top bar: back + title on the left, everything you need on the right ===== -->
+        <header class="pdfsel-top">
+            <div class="pdfsel-heading">
+                <a th:href="@{/admin/claims}" class="pdfsel-back-btn" title="Back to claims">
+                    <i class="bi bi-arrow-left"></i><span>Back</span>
+                </a>
+                <div class="pdfsel-heading-text">
+                    <h1 class="pdfsel-title">Download pages</h1>
+                    <p class="pdfsel-subtitle" id="subtitle">Preparing your pages…</p>
+                </div>
             </div>
-            <div class="pdfsel-toolbar-actions">
-                <button type="button" class="pdfsel-btn pdfsel-btn-ghost" onclick="selectAll()">
-                    <i class="bi bi-check2-square"></i> Select All
+
+            <div class="pdfsel-actions">
+                <div class="pdfsel-zoom-group" role="group" aria-label="Zoom">
+                    <button type="button" class="pdfsel-icon-btn" id="zoomOut" title="Zoom out ( - )" aria-label="Zoom out">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <span class="pdfsel-zoom-label" id="zoomLabel" aria-live="polite">100%</span>
+                    <button type="button" class="pdfsel-icon-btn" id="zoomIn" title="Zoom in ( + )" aria-label="Zoom in">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <button type="button" class="pdfsel-icon-btn pdfsel-fit-btn" id="zoomFit" title="Fit to screen ( 0 )" aria-label="Fit to screen">
+                        <i class="bi bi-arrows-angle-contract"></i>
+                    </button>
+                </div>
+
+                <button type="button" class="pdfsel-btn pdfsel-btn-ghost" id="selectToggle" disabled>
+                    <i class="bi bi-check2-all"></i><span id="selectToggleLabel">Select all</span>
                 </button>
-                <button type="button" class="pdfsel-btn pdfsel-btn-ghost" onclick="deselectAll()">
-                    <i class="bi bi-square"></i> Deselect All
-                </button>
-                <button type="button" class="pdfsel-btn pdfsel-btn-primary" id="downloadBtn" onclick="downloadSelected()" disabled>
-                    <i class="bi bi-download"></i> Download Selected (<span id="selectedCount">0</span>)
+
+                <button type="button" class="pdfsel-btn pdfsel-btn-primary" id="downloadBtn" disabled>
+                    <i class="bi bi-download"></i>
+                    <span>Download</span>
+                    <span class="pdfsel-count" id="selectedCount">0</span>
                 </button>
             </div>
-        </div>
+        </header>
 
-        <p class="pdfsel-hint"><i class="bi bi-info-circle"></i> Click a page to preview it full-size. Use the checkbox in the corner to select it for download.</p>
-
-        <div id="pdfPagesContainer" class="pdfsel-grid">
+        <!-- ===== Viewer: all filled pages merged into one sheet that fits the screen ===== -->
+        <section class="pdfsel-stage" id="stage" aria-label="Page preview">
             <div class="pdfsel-loading" id="loadingMsg">
                 <div class="pdfsel-spinner"></div>
-                <span>Loading pages...</span>
+                <span id="loadingText">Loading pages…</span>
             </div>
-        </div>
+            <div class="pdfsel-sheet" id="sheet" hidden></div>
+        </section>
+
+        <!-- ===== Status bar ===== -->
+        <footer class="pdfsel-status">
+            <span class="pdfsel-hint">
+                <i class="bi bi-info-circle"></i>
+                Click a section to select or unselect it. Ctrl + scroll to zoom. Drag to move around when zoomed in.
+            </span>
+
+            <label class="pdfsel-switch" id="emptyToggleWrap" hidden>
+                <input type="checkbox" id="showEmpty">
+                <span class="pdfsel-switch-track"></span>
+                <span id="emptyToggleLabel">Show empty pages</span>
+            </label>
+        </footer>
     </div>
 </main>
 
-<!-- Zoom / preview modal -->
-<div id="pdfZoomOverlay" class="pdfsel-zoom-overlay" onclick="closeZoomOnBackdrop(event)">
-    <div class="pdfsel-zoom-modal">
-        <div class="pdfsel-zoom-header">
-            <span id="pdfZoomLabel">Page 1</span>
-            <button type="button" class="pdfsel-zoom-close" onclick="closeZoom()">&times;</button>
-        </div>
-        <div class="pdfsel-zoom-body" id="pdfZoomBody">
-            <button type="button" class="pdfsel-zoom-nav" onclick="zoomNav(-1)">&#8249;</button>
-            <div class="pdfsel-zoom-canvas-wrap" id="pdfZoomCanvasWrap">
-                <canvas id="pdfZoomCanvas"></canvas>
-            </div>
-            <button type="button" class="pdfsel-zoom-nav" onclick="zoomNav(1)">&#8250;</button>
-        </div>
-        <div class="pdfsel-zoom-footer">
-            <label class="pdfsel-zoom-select-label">
-                <input type="checkbox" id="pdfZoomCheckbox" onchange="toggleFromZoom(this)">
-                Select this page for download
-            </label>
-        </div>
-    </div>
-</div>
+<div class="pdfsel-toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script th:inline="javascript">
-    const workflowId = /*[[${workflowId}]]*/ 0;
-    const pdfUrl = /*[[@{/claims/pdf/{id}(id=${workflowId})}]]*/ '';
+    (() => {
+        /* ---------- Config from server ---------- */
+        const workflowId  = /*[[${workflowId}]]*/ 0;
+        const pdfUrl      = /*[[@{/claims/pdf/{id}(id=${workflowId})}]]*/ '';
+        const downloadUrl = /*[[@{/claims/pdf/{id}/pages(id=${workflowId})}]]*/ '';
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    const selectedPages = new Set();
-    let pdfDoc = null;
-    let currentZoomPage = 1;
-    let zoomLevel = 1.0; // 1.0 = base "fit" render, adjustable via +/- buttons
+        /* ---------- Tunables ---------- */
+        const RENDER_SCALE = Math.min(3, Math.max(2, (window.devicePixelRatio || 1) * 1.5)); // crispness
+        const CROP_MARGIN  = 12;    // px (at scale 1) kept around the content of each page
+        const MIN_ZOOM     = 0.2;
+        const MAX_ZOOM     = 4;
+        const MAX_FIT      = 3;     // don't blow a tiny page up beyond 300% when fitting
+        const ZOOM_STEP    = 1.25;
 
-    function updateDownloadButton() {
-        document.getElementById('selectedCount').textContent = selectedPages.size;
-        document.getElementById('downloadBtn').disabled = selectedPages.size === 0;
-    }
+        /* ---------- State ---------- */
+        const pages = [];                 // { num, canvas, w, h, empty, el }
+        const selected = new Set();
+        let showEmpty = false;
+        let fitMode = true;
+        let zoom = 1;
 
-    function setCardSelected(pageNum, isSelected) {
-        const card = document.querySelector(`.pdfsel-card[data-page="${pageNum}"]`);
-        if (card) card.classList.toggle('selected', isSelected);
-    }
+        /* ---------- Elements ---------- */
+        const $ = id => document.getElementById(id);
+        const stage = $('stage'), sheet = $('sheet');
+        const downloadBtn = $('downloadBtn'), selectToggle = $('selectToggle');
 
-    function togglePage(pageNum, checkboxEl) {
-        checkboxEl.checked ? selectedPages.add(pageNum) : selectedPages.delete(pageNum);
-        setCardSelected(pageNum, checkboxEl.checked);
-        updateDownloadButton();
-    }
+        /* =====================================================================
+           Loading + preparing pages
+           ===================================================================== */
+        async function init() {
+            try {
+                const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
 
-    function selectAll() {
-        document.querySelectorAll('.page-checkbox').forEach(cb => {
-            cb.checked = true;
-            selectedPages.add(parseInt(cb.dataset.page));
-            setCardSelected(parseInt(cb.dataset.page), true);
+                for (let n = 1; n <= pdfDoc.numPages; n++) {
+                    $('loadingText').textContent = `Preparing page ${n} of ${pdfDoc.numPages}…`;
+                    pages.push(await preparePage(pdfDoc, n));
+                }
+
+                // If every page looks empty, show them all rather than an empty screen
+                if (pages.every(p => p.empty)) pages.forEach(p => p.empty = false);
+
+                pages.forEach(buildSection);
+
+                // Default: every page the user filled in is already selected
+                pages.filter(p => !p.empty).forEach(p => selected.add(p.num));
+
+                $('loadingMsg').remove();
+                sheet.hidden = false;
+                renderSheet();
+            } catch (err) {
+                console.error(err);
+                $('loadingMsg').innerHTML =
+                    '<i class="bi bi-exclamation-triangle pdfsel-error-icon"></i>' +
+                    '<span>We couldn\'t load this attachment.</span>' +
+                    '<button type="button" class="pdfsel-btn pdfsel-btn-ghost" onclick="location.reload()">' +
+                    '<i class="bi bi-arrow-clockwise"></i> Try again</button>';
+            }
+        }
+
+        // Renders one page, crops it to its content, and works out whether the user filled it in
+        async function preparePage(pdfDoc, num) {
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale: RENDER_SCALE });
+
+            const full = document.createElement('canvas');
+            full.width = Math.ceil(viewport.width);
+            full.height = Math.ceil(viewport.height);
+            const fullCtx = full.getContext('2d', { willReadFrequently: true });
+            await page.render({ canvasContext: fullCtx, viewport }).promise;
+
+            const bbox = getContentBoundingBox(full, fullCtx);
+            const emptyByText = await hasOnlyZeroAmounts(page);
+            const empty = !bbox || emptyByText;
+
+            const m = CROP_MARGIN * RENDER_SCALE;
+            const box = bbox || { minX: 0, minY: 0, maxX: full.width, maxY: full.height };
+            const cropX = Math.max(0, Math.floor(box.minX - m));
+            const cropY = Math.max(0, Math.floor(box.minY - m));
+            const cropW = Math.min(full.width - cropX, Math.ceil(box.maxX - box.minX + m * 2));
+            const cropH = Math.min(full.height - cropY, Math.ceil(box.maxY - box.minY + m * 2));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = cropW;
+            canvas.height = cropH;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, cropW, cropH);
+            ctx.drawImage(full, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+            // natural (CSS px at 100%) size of the cropped page
+            return { num, canvas, w: cropW / RENDER_SCALE, h: cropH / RENDER_SCALE, empty, el: null };
+        }
+
+        // A page counts as "not filled in" when it has amounts and every one of them is 0.00
+        async function hasOnlyZeroAmounts(page) {
+            try {
+                const content = await page.getTextContent();
+                const text = content.items.map(i => i.str).join(' ');
+                const amounts = text.match(/\d[\d,]*\.\d{2}\b/g) || [];
+                if (amounts.length === 0) return false;           // can't tell, so keep the page
+                return amounts.every(a => parseFloat(a.replace(/,/g, '')) === 0);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Finds the rectangle that encloses all non-white, non-transparent pixels
+        function getContentBoundingBox(canvas, ctx) {
+            const { width, height } = canvas;
+            const data = ctx.getImageData(0, 0, width, height).data;
+            const whiteThreshold = 250;
+            const step = 3;
+            let minX = width, minY = height, maxX = 0, maxY = 0, found = false;
+
+            for (let y = 0; y < height; y += step) {
+                for (let x = 0; x < width; x += step) {
+                    const i = (y * width + x) * 4;
+                    const a = data[i + 3];
+                    const isBackground = a === 0 ||
+                        (data[i] > whiteThreshold && data[i + 1] > whiteThreshold && data[i + 2] > whiteThreshold);
+                    if (!isBackground) {
+                        found = true;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+            return found ? { minX, minY, maxX, maxY } : null;
+        }
+
+        /* =====================================================================
+           Building the merged sheet
+           ===================================================================== */
+        function buildSection(p) {
+            const el = document.createElement('div');
+            el.className = 'pdfsel-section';
+            el.tabIndex = 0;
+            el.setAttribute('role', 'checkbox');
+            el.setAttribute('aria-checked', 'false');
+            el.setAttribute('aria-label', `Page ${p.num}`);
+            el.dataset.page = p.num;
+
+            p.canvas.style.width = `calc(${p.w}px * var(--z, 1))`;
+            p.canvas.style.height = 'auto';
+            el.appendChild(p.canvas);
+
+            const badge = document.createElement('span');
+            badge.className = 'pdfsel-badge';
+            badge.innerHTML = `<span class="pdfsel-badge-box"><i class="bi bi-check-lg"></i></span><span>Page ${p.num}</span>`;
+            el.appendChild(badge);
+
+            if (p.empty) {
+                const tag = document.createElement('span');
+                tag.className = 'pdfsel-empty-tag';
+                tag.textContent = 'Nothing filled in';
+                el.appendChild(tag);
+            }
+
+            el.addEventListener('click', () => toggle(p.num));
+            el.addEventListener('keydown', e => {
+                if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(p.num); }
+            });
+            p.el = el;
+        }
+
+        const visiblePages = () => pages.filter(p => showEmpty || !p.empty);
+
+        function renderSheet() {
+            sheet.replaceChildren(...visiblePages().map(p => p.el));
+            updateSelectionUI();
+            updateStatus();
+            applyZoom();
+        }
+
+        /* =====================================================================
+           Selection
+           ===================================================================== */
+        function toggle(num) {
+            selected.has(num) ? selected.delete(num) : selected.add(num);
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const vis = visiblePages();
+            pages.forEach(p => {
+                const on = selected.has(p.num);
+                p.el.classList.toggle('selected', on);
+                p.el.setAttribute('aria-checked', on);
+            });
+
+            const count = selected.size;
+            $('selectedCount').textContent = count;
+            downloadBtn.disabled = count === 0;
+            downloadBtn.title = count ? `Download ${count} page${count === 1 ? '' : 's'} as PDF` : 'Select at least one page';
+
+            const allOn = vis.length > 0 && vis.every(p => selected.has(p.num));
+            selectToggle.disabled = vis.length === 0;
+            $('selectToggleLabel').textContent = allOn ? 'Clear selection' : 'Select all';
+            selectToggle.querySelector('i').className = allOn ? 'bi bi-x-lg' : 'bi bi-check2-all';
+        }
+
+        selectToggle.addEventListener('click', () => {
+            const vis = visiblePages();
+            const allOn = vis.every(p => selected.has(p.num));
+            vis.forEach(p => allOn ? selected.delete(p.num) : selected.add(p.num));
+            updateSelectionUI();
         });
-        updateDownloadButton();
-    }
 
-    function deselectAll() {
-        document.querySelectorAll('.page-checkbox').forEach(cb => {
-            cb.checked = false;
-            setCardSelected(parseInt(cb.dataset.page), false);
+        function updateStatus() {
+            const emptyCount = pages.filter(p => p.empty).length;
+            const total = pages.length;
+            const shown = visiblePages().length;
+
+            $('subtitle').textContent = (emptyCount && !showEmpty)
+                ? `Showing ${shown} of ${total} pages. ${emptyCount} with nothing filled in ${emptyCount === 1 ? 'is' : 'are'} hidden.`
+                : `${total} page${total === 1 ? '' : 's'} in this attachment.`;
+
+            const wrap = $('emptyToggleWrap');
+            wrap.hidden = emptyCount === 0;
+            $('emptyToggleLabel').textContent =
+                `Show ${emptyCount} empty page${emptyCount === 1 ? '' : 's'}`;
+        }
+
+        $('showEmpty').addEventListener('change', e => {
+            showEmpty = e.target.checked;
+            if (!showEmpty) pages.filter(p => p.empty).forEach(p => selected.delete(p.num)); // no hidden downloads
+            renderSheet();
         });
-        selectedPages.clear();
-        updateDownloadButton();
-    }
 
-    function downloadSelected() {
-        if (selectedPages.size === 0) return;
-        const pages = Array.from(selectedPages).sort((a, b) => a - b).join(',');
-        window.location.href = `/claims/pdf/${workflowId}/pages?pages=${pages}`;
-    }
+        /* =====================================================================
+           Download
+           ===================================================================== */
+        downloadBtn.addEventListener('click', () => {
+            if (selected.size === 0) return;
+            const list = Array.from(selected).sort((a, b) => a - b);
+            showToast(`Downloading ${list.length} page${list.length === 1 ? '' : 's'}…`);
+            window.location.href = `${downloadUrl}?pages=${list.join(',')}`;
+        });
 
-    async function renderPdfThumbnails() {
-        const container = document.getElementById('pdfPagesContainer');
-        try {
-            pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
-            document.getElementById('loadingMsg').remove();
-            document.getElementById('pageCountBadge').textContent = `${pdfDoc.numPages} pages`;
-
-            // Step 1: render every page and crop to its actual content
-            const croppedPages = [];
-            for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                const page = await pdfDoc.getPage(pageNum);
-                const viewport = page.getViewport({ scale: 1.0 });
-
-                const fullCanvas = document.createElement('canvas');
-                fullCanvas.width = viewport.width;
-                fullCanvas.height = viewport.height;
-                const fullCtx = fullCanvas.getContext('2d');
-                await page.render({ canvasContext: fullCtx, viewport }).promise;
-
-                const bbox = getContentBoundingBox(fullCanvas, fullCtx);
-                const margin = 12;
-                const cropX = Math.max(0, bbox.minX - margin);
-                const cropY = Math.max(0, bbox.minY - margin);
-                const cropW = Math.min(fullCanvas.width - cropX, bbox.maxX - bbox.minX + margin * 2);
-                const cropH = Math.min(fullCanvas.height - cropY, bbox.maxY - bbox.minY + margin * 2);
-
-                croppedPages.push({ pageNum, fullCanvas, cropX, cropY, cropW, cropH });
-            }
-
-            // Step 2: build one tall canvas stacking all cropped strips
-            const gap = 20; // visual breathing room + divider between pages
-            const stitchWidth = Math.max(...croppedPages.map(p => p.cropW));
-            const stitchHeight = croppedPages.reduce((sum, p) => sum + p.cropH, 0) + gap * (croppedPages.length - 1);
-
-            const stitchCanvas = document.createElement('canvas');
-            stitchCanvas.width = stitchWidth;
-            stitchCanvas.height = stitchHeight;
-            const stitchCtx = stitchCanvas.getContext('2d');
-            stitchCtx.fillStyle = '#ffffff';
-            stitchCtx.fillRect(0, 0, stitchWidth, stitchHeight);
-
-            const pageBoundaries = [];
-            let yOffset = 0;
-            for (const p of croppedPages) {
-                stitchCtx.drawImage(
-                    p.fullCanvas,
-                    p.cropX, p.cropY, p.cropW, p.cropH,
-                    0, yOffset, p.cropW, p.cropH
-                );
-                pageBoundaries.push({ pageNum: p.pageNum, yStart: yOffset, yEnd: yOffset + p.cropH });
-
-                yOffset += p.cropH;
-                if (p !== croppedPages[croppedPages.length - 1]) {
-                    // draw a subtle divider line in the gap
-                    stitchCtx.strokeStyle = '#e2e8f0';
-                    stitchCtx.lineWidth = 1;
-                    stitchCtx.beginPath();
-                    stitchCtx.moveTo(0, yOffset + gap / 2);
-                    stitchCtx.lineTo(stitchWidth, yOffset + gap / 2);
-                    stitchCtx.stroke();
-                    yOffset += gap;
-                }
-            }
-
-            // Step 3: render the single stitched canvas + per-page checkboxes overlaid at boundaries
-            const wrap = document.createElement('div');
-            wrap.className = 'pdfsel-stitched-wrap';
-            wrap.style.position = 'relative';
-            wrap.appendChild(stitchCanvas);
-
-            // Overlay a checkbox + label at the top-left of each page's region
-            for (const b of pageBoundaries) {
-                const overlay = document.createElement('div');
-                overlay.className = 'pdfsel-stitch-page-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.top = `${b.yStart + 8}px`;
-                overlay.style.left = '8px';
-                overlay.innerHTML = `
-                <label class="pdfsel-stitch-label">
-                    <input type="checkbox" class="page-checkbox" data-page="${b.pageNum}"
-                           onchange="togglePage(${b.pageNum}, this)">
-                    Page ${b.pageNum}
-                </label>
-            `;
-                wrap.appendChild(overlay);
-            }
-
-            container.innerHTML = '';
-            container.appendChild(wrap);
-
-        } catch (err) {
-            container.innerHTML = '<p style="color:#f87171;grid-column:1/-1;">Failed to load PDF preview.</p>';
-            console.error(err);
-        }
-    }
-
-    function getContentBoundingBox(canvas, ctx) {
-        const { width, height } = canvas;
-        const data = ctx.getImageData(0, 0, width, height).data;
-        const whiteThreshold = 250;
-        let minX = width, minY = height, maxX = 0, maxY = 0;
-        let found = false;
-        const step = 2;
-
-        for (let y = 0; y < height; y += step) {
-            for (let x = 0; x < width; x += step) {
-                const i = (y * width + x) * 4;
-                const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-                const isBackground = a === 0 || (r > whiteThreshold && g > whiteThreshold && b > whiteThreshold);
-                if (!isBackground) {
-                    found = true;
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
-                }
-            }
+        let toastTimer;
+        function showToast(msg) {
+            const t = $('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
         }
 
-        if (!found) return { minX: 0, minY: 0, maxX: width, maxY: height };
-        return { minX, minY, maxX, maxY };
-    }
-
-    // Scans pixel data to find the rectangle enclosing all non-white/non-transparent content
-    function getContentBoundingBox(canvas, ctx) {
-        const { width, height } = canvas;
-        const data = ctx.getImageData(0, 0, width, height).data;
-        const whiteThreshold = 250; // treat near-white as background
-        let minX = width, minY = height, maxX = 0, maxY = 0;
-        let found = false;
-
-        // Sample every 2px for speed on large pages
-        const step = 2;
-        for (let y = 0; y < height; y += step) {
-            for (let x = 0; x < width; x += step) {
-                const i = (y * width + x) * 4;
-                const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-                const isBackground = a === 0 || (r > whiteThreshold && g > whiteThreshold && b > whiteThreshold);
-                if (!isBackground) {
-                    found = true;
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
-                }
-            }
+        /* =====================================================================
+           Zoom
+           ===================================================================== */
+        function computeFit() {
+            const vis = visiblePages();
+            if (!vis.length) return 1;
+            const cs = getComputedStyle(stage);
+            const availW = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 4;
+            const availH = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 4;
+            const maxW = Math.max(...vis.map(p => p.w));
+            const sumH = vis.reduce((s, p) => s + p.h, 0);
+            const dividers = vis.length;                       // 1px divider per section
+            const fit = Math.min(availW / maxW, (availH - dividers) / sumH, MAX_FIT);
+            return Math.max(MIN_ZOOM, Math.floor(fit * 1000) / 1000);
         }
 
-        if (!found) {
-            // Fallback: whole page has no detectable content, return full canvas
-            return { minX: 0, minY: 0, maxX: width, maxY: height };
-        }
-        return { minX, minY, maxX, maxY };
-    }
-
-    async function renderZoomPage(pageNum) {
-        const page = await pdfDoc.getPage(pageNum);
-        const dpr = window.devicePixelRatio || 1;
-
-        const nativeViewport = page.getViewport({ scale: 1 });
-        const pageAspectRatio = nativeViewport.height / nativeViewport.width; // actual PDF page ratio
-
-        const wrap = document.getElementById('pdfZoomCanvasWrap');
-        const availableWidth = wrap.clientWidth;
-        const availableHeight = wrap.clientHeight;
-
-        // Fit the page's real proportions within available space, capped so it never exceeds it
-        let displayWidth = availableWidth;
-        let displayHeight = displayWidth * pageAspectRatio;
-
-        if (displayHeight > availableHeight) {
-            displayHeight = availableHeight;
-            displayWidth = displayHeight / pageAspectRatio;
+        function applyZoom() {
+            if (fitMode) zoom = computeFit();
+            sheet.style.setProperty('--z', zoom);
+            $('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+            $('zoomFit').classList.toggle('active', fitMode);
+            requestAnimationFrame(() => {
+                const scrollable = stage.scrollWidth > stage.clientWidth + 1 || stage.scrollHeight > stage.clientHeight + 1;
+                stage.classList.toggle('can-pan', scrollable);
+            });
         }
 
-        // Render at higher pixel density for sharpness, independent of display size
-        const pixelWidth = displayWidth * dpr * 2; // 2x oversample
-        const renderScale = pixelWidth / nativeViewport.width;
-
-        const viewport = page.getViewport({ scale: renderScale });
-        const canvas = document.getElementById('pdfZoomCanvas');
-        const ctx = canvas.getContext('2d');
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        canvas.style.width = displayWidth + 'px';
-        canvas.style.height = displayHeight + 'px';
-
-        await page.render({ canvasContext: ctx, viewport }).promise;
-
-        document.getElementById('pdfZoomLabel').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
-        document.getElementById('pdfZoomCheckbox').checked = selectedPages.has(pageNum);
-    }
-
-    function openZoom(pageNum) {
-        currentZoomPage = pageNum;
-        zoomLevel = 1.0; // reset zoom each time a new page is opened
-        document.getElementById('pdfZoomOverlay').classList.add('active');
-        renderZoomPage(pageNum);
-    }
-
-    function zoomNav(delta) {
-        const next = currentZoomPage + delta;
-        if (next < 1 || next > pdfDoc.numPages) return;
-        currentZoomPage = next;
-        zoomLevel = 1.0; // reset zoom on page navigation too
-        renderZoomPage(currentZoomPage);
-    }
-
-    function closeZoom() {
-        document.getElementById('pdfZoomOverlay').classList.remove('active');
-    }
-
-    function closeZoomOnBackdrop(e) {
-        if (e.target.id === 'pdfZoomOverlay') closeZoom();
-    }
-
-    function toggleFromZoom(checkboxEl) {
-        const gridCheckbox = document.querySelector(`.page-checkbox[data-page="${currentZoomPage}"]`);
-        if (gridCheckbox) {
-            gridCheckbox.checked = checkboxEl.checked;
-            togglePage(currentZoomPage, gridCheckbox);
+        function setZoom(next) {
+            next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
+            // keep whatever is in the middle of the view in the middle
+            const cx = (stage.scrollLeft + stage.clientWidth / 2) / (stage.scrollWidth || 1);
+            const cy = (stage.scrollTop + stage.clientHeight / 2) / (stage.scrollHeight || 1);
+            fitMode = false;
+            zoom = next;
+            applyZoom();
+            stage.scrollLeft = cx * stage.scrollWidth - stage.clientWidth / 2;
+            stage.scrollTop  = cy * stage.scrollHeight - stage.clientHeight / 2;
         }
-    }
 
-    document.addEventListener('keydown', (e) => {
-        if (!document.getElementById('pdfZoomOverlay').classList.contains('active')) return;
-        if (e.key === 'Escape') closeZoom();
-        if (e.key === 'ArrowLeft') zoomNav(-1);
-        if (e.key === 'ArrowRight') zoomNav(1);
-    });
+        function fitToScreen() { fitMode = true; applyZoom(); stage.scrollTo(0, 0); }
 
-    renderPdfThumbnails();
+        $('zoomIn').addEventListener('click',  () => setZoom(zoom * ZOOM_STEP));
+        $('zoomOut').addEventListener('click', () => setZoom(zoom / ZOOM_STEP));
+        $('zoomFit').addEventListener('click', fitToScreen);
+        $('zoomLabel').addEventListener('dblclick', fitToScreen);
+
+        // Ctrl/Cmd + scroll (and trackpad pinch) zooms the sheet instead of the whole browser page
+        stage.addEventListener('wheel', e => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            e.preventDefault();
+            setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+        }, { passive: false });
+
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+            if (e.key === '+' || e.key === '=') setZoom(zoom * ZOOM_STEP);
+            else if (e.key === '-' || e.key === '_') setZoom(zoom / ZOOM_STEP);
+            else if (e.key === '0') fitToScreen();
+        });
+
+        window.addEventListener('resize', () => { if (fitMode) applyZoom(); });
+
+        /* ---------- Drag to move around when zoomed in ---------- */
+        let drag = null, dragged = false;
+        stage.addEventListener('mousedown', e => {
+            if (e.button !== 0 || !stage.classList.contains('can-pan')) return;
+            drag = { x: e.clientX, y: e.clientY, left: stage.scrollLeft, top: stage.scrollTop };
+            dragged = false;
+        });
+        window.addEventListener('mousemove', e => {
+            if (!drag) return;
+            const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+            if (!dragged && Math.hypot(dx, dy) < 5) return;
+            dragged = true;
+            stage.classList.add('is-panning');
+            stage.scrollLeft = drag.left - dx;
+            stage.scrollTop  = drag.top - dy;
+        });
+        window.addEventListener('mouseup', () => {
+            drag = null;
+            stage.classList.remove('is-panning');
+        });
+        // A drag must not count as a click that toggles a page
+        stage.addEventListener('click', e => {
+            if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; }
+        }, true);
+
+        init();
+    })();
 </script>
 </body>
 </html>

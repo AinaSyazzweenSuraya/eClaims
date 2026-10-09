@@ -11,6 +11,7 @@ import java.util.List;
 public interface ClaimAttachmentRepository extends JpaRepository<ClaimAttachment, Integer> {
 
     List<ClaimAttachment> findByWorkflowIdOrderByDocDate(String workflowId);
+    List<ClaimAttachment> findByWorkflowIdAndCategory(String workflowId, String category);
 
     @Modifying
     @Transactional

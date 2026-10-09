@@ -67,6 +67,32 @@ public class AttachmentService {
         return rowRepository.save(row);
     }
 
+    // ── Mileage attachment ──────────────────────────────────
+    @Transactional
+    public ClaimAttachment uploadMileageAttachment(String workflowId, String formId,
+                                                   MultipartFile file) throws IOException {
+        validateFile(file);
+
+        // Only one mileage attachment per claim: replace the old one
+        attachmentRepository.findByWorkflowIdAndCategory(workflowId, "MILEAGE")
+                .forEach(old -> {
+                    deleteFile(old.getStoredFileName());
+                    attachmentRepository.delete(old);
+                });
+
+        String stored = saveFile(file, workflowId);
+
+        ClaimAttachment att = ClaimAttachment.builder()
+                .workflowId(workflowId).formId(formId)
+                .attachment(file.getOriginalFilename())
+                .storedFileName(stored)
+                .contentType(file.getContentType())
+                .category("MILEAGE")
+                .status("New")
+                .build();
+        return attachmentRepository.save(att);
+    }
+
     // ── Delete row attachment ─────────────────────────────────
     @Transactional
     public void deleteRowAttachment(Integer rowId) {
